@@ -1,0 +1,106 @@
+---
+title: "Lesson 1: Define a Motor in FRC Java Code"
+sidebarTitle: "Define a Motor"
+description: "Learn to declare a motor hardware object in Java for NEO (SparkMax), Kraken (TalonFX), or CIM (PWMSparkMax) with the correct imports and CAN/PWM configuration."
+---
+
+Defining a motor is the first step in any FRC robot program. Before you can spin a wheel, run an intake, or extend a mechanism, you need to declare the correct hardware class in Java and assign it a unique CAN ID or PWM port. This lesson walks you through the import statement and field declaration for three of the most common FRC motor controllers: the REV SPARK MAX (NEO), the CTRE Kraken (TalonFX), and the CIM motor via PWMSparkMax.
+
+## Lesson Overview
+
+**What you'll write:**
+- 1 import statement (or a small set of imports) for the motor controller class
+- 1 field declaration that creates the hardware object as a class member
+
+**What you'll learn:**
+- The correct import path for each motor controller vendor library
+- The class name to use: `SparkMax`, `TalonFX`, or `PWMSparkMax`
+- The difference between a CAN ID (network-addressed controllers) and a PWM port (direct roboRIO pin)
+- How to pass the right constructor arguments for each motor type
+
+## Solutions by Motor Type
+
+<Tabs>
+  <Tab title="NEO (SparkMax)">
+    The REV SPARK MAX uses the `SparkMax` class from REVLib. You must specify `MotorType.kBrushless` to tell the controller it is driving a brushless NEO motor.
+
+    ```java
+    import com.revrobotics.spark.SparkMax;
+    import com.revrobotics.spark.SparkLowLevel.MotorType;
+
+    public class RobotContainer {
+        private final SparkMax m_motor = new SparkMax(1, MotorType.kBrushless);
+    }
+    ```
+  </Tab>
+  <Tab title="Kraken (TalonFX)">
+    The CTRE Kraken uses the `TalonFX` class from Phoenix 6. The second constructor argument is the CANivore bus name — FRC Academy uses `"DINO"` as its default bus name.
+
+    ```java
+    import com.ctre.phoenix6.hardware.TalonFX;
+
+    public class RobotContainer {
+        private final TalonFX m_motor = new TalonFX(1, "DINO");
+    }
+    ```
+  </Tab>
+  <Tab title="CIM (PWMSparkMax)">
+    CIM motors driven over PWM use the `PWMSparkMax` class from WPILib. The only constructor argument is the PWM port number on the roboRIO, starting from `0`.
+
+    ```java
+    import edu.wpi.first.wpilibj.motorcontrol.PWMSparkMax;
+
+    public class RobotContainer {
+        private final PWMSparkMax m_motor = new PWMSparkMax(0);
+    }
+    ```
+  </Tab>
+</Tabs>
+
+## Key Concepts
+
+**CAN ID**
+A unique integer assigned to each motor controller on the CAN bus. Every device on the bus must have a distinct ID — no two controllers can share the same number. FRC Academy uses ID `1` by default. You configure CAN IDs using each vendor's hardware client (REV Hardware Client or CTRE Phoenix Tuner X).
+
+**PWM Port**
+A 0-based integer index corresponding to a physical PWM output header on the roboRIO. PWM controllers like `PWMSparkMax` do not use the CAN bus at all — they receive analog pulse-width signals directly. FRC Academy uses port `0` for single-motor PWM lessons.
+
+**`MotorType.kBrushless`**
+This enum value tells the SPARK MAX that the attached motor is brushless (a NEO or NEO 550). Using the wrong motor type can damage the motor or controller, so always double-check this setting.
+
+**Bus name (`"DINO"`)**
+CTRE Phoenix 6 devices can communicate over a dedicated CANivore USB-to-CAN adapter instead of the roboRIO's built-in CAN bus. The bus name is a team-assigned string identifier for that adapter. FRC Academy uses `"DINO"` — your team may use a different name, or omit the second argument entirely to use the roboRIO bus.
+
+## In FRC Academy
+
+To reach this lesson in the app:
+
+<Steps>
+  <Step title="Open the Main Menu">
+    Launch FRC Academy and click **Motors** from the main menu.
+  </Step>
+  <Step title="Select a motor type">
+    Choose **NEO**, **Kraken**, or **CIM** depending on which motor you want to learn.
+  </Step>
+  <Step title="Open Lesson 1">
+    Select **1. Define a Motor** from the lesson list.
+  </Step>
+  <Step title="Choose a mode">
+    Pick **Guided Mode** (step-by-step hints) or **Unguided Mode** (blank editor, write it yourself).
+  </Step>
+</Steps>
+
+<Note>
+  In a real WPILib robot project, this field declaration lives in `RobotContainer.java` (Command-Based) or `Robot.java` (TimedRobot). The `private final` modifiers ensure the motor object is created once and shared across your robot code.
+</Note>
+
+---
+
+<CardGroup cols={2}>
+  <Card title="Activate a Motor →" icon="bolt" href="/lessons/activate-motor">
+    Lesson 2 — Bind a controller button to run your motor at 50% speed using `whileTrue` and `onFalse`.
+  </Card>
+  <Card title="Motors Overview" icon="motor" href="/learning-paths/motors-overview">
+    Compare NEO, Kraken, and CIM motor controllers side by side.
+  </Card>
+</CardGroup>

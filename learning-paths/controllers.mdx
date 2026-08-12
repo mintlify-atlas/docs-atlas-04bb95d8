@@ -1,0 +1,107 @@
+---
+title: "Controllers Learning Path: Xbox Controller Mapping"
+sidebarTitle: "Controllers"
+description: "Learn to define driver and operator Xbox controllers in FRC robot code using CommandXboxController. Map ports, bind events, and control your robot with real Java code."
+---
+
+The Controllers lesson in FRC Academy teaches you how to wire up Xbox controllers so your robot can respond to human input. You'll define two `CommandXboxController` objects — one for the driver (USB port 0) and one for the operator (USB port 1) — import the class from WPILib, and declare both as `private final` fields inside your robot class. By the end of this lesson, your robot code will be ready to accept event bindings like `.whileTrue()` and `.onFalse()` on any button.
+
+## What You'll Learn
+
+- Importing `CommandXboxController` from `edu.wpi.first.wpilibj2.command`
+- Declaring `private final` controller fields inline inside the robot class
+- Binding buttons with `.whileTrue()` and `.onFalse()` for event-driven command execution
+- Understanding driver vs. operator port assignments and why they must be different
+- The difference between `CommandXboxController` and the legacy `XboxController` class
+
+## Guided Steps
+
+The FRC Academy app walks you through four steps in the in-editor popup. Each step shows an instruction and the exact line of code to type.
+
+<Steps>
+  <Step title="Import CommandXboxController from WPILib">
+    Add the import statement at the top of your file so Java knows where to find the class.
+
+    ```java
+    import edu.wpi.first.wpilibj2.command.CommandXboxController;
+    ```
+  </Step>
+
+  <Step title="Declare driverController on port 0">
+    Inside the robot class body, declare the driver's controller as a `private final` field assigned to USB port 0.
+
+    ```java
+    private final CommandXboxController driverController = new CommandXboxController(0);
+    ```
+  </Step>
+
+  <Step title="Declare operatorController on port 1">
+    Below the driver declaration, add a second controller for the operator on port 1.
+
+    ```java
+    private final CommandXboxController operatorController = new CommandXboxController(1);
+    ```
+  </Step>
+
+  <Step title="Click Verify Code">
+    Once both declarations are in place, click the **Verify Code** button in the editor toolbar. FRC Academy will run a line-by-line diagnostic and highlight correct lines in green and any errors in red.
+  </Step>
+</Steps>
+
+## The Solution
+
+Here is the complete, verified solution that the FRC Academy Code Review modal checks against:
+
+```java RobotContainer.java
+import edu.wpi.first.wpilibj.TimedRobot;
+import edu.wpi.first.wpilibj2.command.CommandXboxController;
+
+public class Robot extends TimedRobot {
+    private final CommandXboxController driverController = new CommandXboxController(0);
+    private final CommandXboxController operatorController = new CommandXboxController(1);
+
+    @Override
+    public void robotInit() { }
+}
+```
+
+<Note>
+  The solution includes a `TimedRobot` import and an empty `robotInit()` override. FRC Academy verifies your code line-by-line against this exact solution, so be sure your whitespace and field names match.
+</Note>
+
+## Key Classes
+
+<Accordion title="CommandXboxController vs XboxController">
+  **`CommandXboxController`** (from `edu.wpi.first.wpilibj2.command`) is the modern WPILib class designed for the Command-Based robot paradigm. Its buttons return `Trigger` objects, which means you can attach command bindings directly:
+
+  ```java
+  operatorController.b()
+      .whileTrue(new RunCommand(() -> m_motor.set(0.5)))
+      .onFalse(new InstantCommand(() -> m_motor.set(0.0)));
+  ```
+
+  **`XboxController`** (from `edu.wpi.first.wpilibj`) is the older class that only reads raw boolean/axis values. It does **not** support `.whileTrue()` or `.onFalse()` event binding and is not suitable for use with `CommandScheduler`. Use `CommandXboxController` for all new robot projects.
+</Accordion>
+
+## Port Assignments
+
+FRC uses USB port numbers to identify controllers plugged into the Driver Station laptop:
+
+| Port | Assigned To | Convention |
+|------|-------------|------------|
+| `0` | Driver controller | Primary driving, left/right joystick movement |
+| `1` | Operator controller | Secondary mechanisms, button-bound subsystem commands |
+
+Port numbers are set in the **FRC Driver Station** application under the **USB** tab. Make sure the correct controller appears at the right port number before running a match. If a controller is unplugged and re-plugged, the Driver Station may reassign its port — always double-check before enabling the robot.
+
+<Warning>
+  If both controllers are assigned the same port number in your code, only one will respond. Always use port `0` for the driver and port `1` for the operator.
+</Warning>
+
+<Tip>
+  `CommandXboxController` is the modern WPILib approach for all Command-Based projects. See the API reference at `/api/wpilib-commands` for the full class details including all available button trigger methods.
+</Tip>
+
+<Card title="API: CommandXboxController" icon="code" href="/api/wpilib-commands">
+  Full class reference for CommandXboxController, RunCommand, and InstantCommand
+</Card>

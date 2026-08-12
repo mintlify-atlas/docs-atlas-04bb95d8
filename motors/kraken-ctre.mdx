@@ -1,0 +1,112 @@
+---
+title: "Kraken Motor (CTRE Phoenix 6) Setup and Programming"
+sidebarTitle: "Kraken (CTRE)"
+description: "Learn to define and control a CTRE Kraken or Falcon 500 motor using TalonFX and the Phoenix 6 vendor library. Covers CAN ID, bus name, and DutyCycleOut control."
+---
+
+The **CTRE Kraken x60** (and its predecessor, the **Falcon 500**) are high-performance brushless motors built directly into their own motor controller — the **TalonFX**. These motors are programmed using the **CTRE Phoenix 6** vendor library, which provides a rich API for control modes, configuration, telemetry, and multi-motor synchronization. In FRC Academy lessons, these motors are controlled using the `DutyCycleOut` control request, which maps directly to a -1.0 to 1.0 speed range.
+
+## Hardware Requirements
+
+Before writing any code, make sure you have the following ready:
+
+- **TalonFX integrated motor controller** (built into the Kraken x60 or Falcon 500)
+- **CAN bus connection** from the TalonFX to the roboRIO or a **CANivore** CAN bridge
+- **CTRE Phoenix 6 vendor library** installed in your WPILib project (available through **Phoenix Tuner X**)
+
+<Warning>
+  CTRE Phoenix 6 is a paid vendor library available through Phoenix Tuner X. Ensure it is properly licensed and installed in your WPILib project's `vendordeps` folder before compiling. Without it, `TalonFX` and `DutyCycleOut` will not resolve.
+</Warning>
+
+## Required Imports
+
+Add these imports at the top of your `Robot.java` file for basic single-motor control:
+
+```java
+import com.ctre.phoenix6.hardware.TalonFX;
+import com.ctre.phoenix6.controls.DutyCycleOut;
+```
+
+For multi-motor drivetrains that use follower pairing, also add:
+
+```java
+import com.ctre.phoenix6.controls.Follower;
+```
+
+## Defining a Kraken Motor
+
+Declare and instantiate a `TalonFX` object inline as a private final field. The constructor takes two arguments: the **CAN ID** and the **CAN bus name**.
+
+- **CAN ID `1`** is the default used in all FRC Academy lessons.
+- **`"DINO"`** is the CANivore bus name used by FRC Team 9607. Replace this with your team's CANivore name, or use an empty string `""` to target the roboRIO's built-in CAN bus.
+
+```java
+private final TalonFX m_motor = new TalonFX(1, "DINO");
+```
+
+<Note>
+  `"DINO"` is the CAN bus name used by FRC Team 9607. Replace it with your team's CANivore bus name, or use an empty string `""` to connect through the roboRIO CAN bus instead.
+</Note>
+
+## Setting Motor Output
+
+Unlike WPILib's `.set()` method, CTRE Phoenix 6 uses a **control request** pattern. You pass a control request object into `setControl()`. For duty-cycle (percent output) control, use `DutyCycleOut`:
+
+```java
+m_motor.setControl(new DutyCycleOut(0.5));  // 50% forward
+m_motor.setControl(new DutyCycleOut(0.0));  // stop
+```
+
+The `DutyCycleOut` value ranges from **-1.0** (full reverse) to **1.0** (full forward). For performance-sensitive code, consider caching the `DutyCycleOut` object as a field and updating its `Output` property instead of creating a new object every loop.
+
+## Follower Motors (for Tank Drive)
+
+In a tank drivetrain, each side of the robot typically has two motors driving the same gearbox. Instead of commanding each motor individually, you can configure one motor as a **follower** that mirrors the output of a **lead** motor. In Phoenix 6, this is done with the `Follower` control request.
+
+For a **2-motor drive** setup, the right motor must also be **inverted** relative to the left, because the motors face opposite directions. Pass `true` as the `opposeLeader` argument to the `Follower` constructor:
+
+```java
+private final TalonFX m_leftMotor = new TalonFX(1, "DINO");
+private final TalonFX m_rightMotor = new TalonFX(2, "DINO");
+
+// In robotInit():
+m_rightMotor.setControl(new Follower(m_leftMotor.getDeviceID(), true)); // opposed
+```
+
+For a **4-motor drive** setup (two motors per side), configure follower motors independently:
+
+```java
+// In robotInit():
+m_leftFollow.setControl(new Follower(m_leftLead.getDeviceID(), false));
+m_rightFollow.setControl(new Follower(m_rightLead.getDeviceID(), false));
+```
+
+Then invert the entire right side using `MotorOutputConfigs`:
+
+```java
+import com.ctre.phoenix6.configs.MotorOutputConfigs;
+import com.ctre.phoenix6.signals.InvertedValue;
+
+var rightConfig = new MotorOutputConfigs();
+rightConfig.Inverted = InvertedValue.Clockwise_Positive;
+m_rightLead.getConfigurator().apply(rightConfig);
+```
+
+## Available Lessons
+
+FRC Academy includes four hands-on coding lessons for the Kraken motor. Each lesson builds on the previous one, from a minimal motor declaration all the way to a full four-motor arcade drivetrain.
+
+<CardGroup cols={2}>
+  <Card title="1. Define a Motor" icon="microchip" href="/lessons/define-motor">
+    Declare and instantiate a `TalonFX` with CAN ID `1` and bus name `"DINO"`.
+  </Card>
+  <Card title="2. Activate a Single Motor" icon="bolt" href="/lessons/activate-motor">
+    Bind a `DutyCycleOut` control request to the operator controller's B button using `whileTrue` and `onFalse`.
+  </Card>
+  <Card title="3. 2 Motor Tank Drive" icon="car" href="/lessons/tank-drive-2motor">
+    Declare left (ID 1) and right (ID 2) motors, invert the right side via `MotorOutputConfigs`, and implement arcade drive with `DutyCycleOut` in `teleopPeriodic()`.
+  </Card>
+  <Card title="4. 4 Motor Tank Drive" icon="truck" href="/lessons/tank-drive-4motor">
+    Extend to four motors using `Follower` control requests, configure right-side inversion, and drive with `DutyCycleOut` on lead motors.
+  </Card>
+</CardGroup>

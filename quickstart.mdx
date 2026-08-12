@@ -1,47 +1,96 @@
 ---
-title: "Quickstart"
-description: "Begin with a guide on the fastest path to a successful outcome"
+title: "Get Started with FRC Academy in 5 Minutes"
+sidebarTitle: "Quickstart"
+description: "Complete your first FRC Academy lesson — define a NEO motor in Java — using the interactive code editor. No robot hardware required."
 ---
 
-Describe how someone begins using your product. What is the first thing they need to do? Are there any prerequisites?
-
-A quickstart should take someone from zero to using your product. They'll get a quick win and a sense of what they can accomplish.
-
-## Prerequisites
-
-Before you begin, you must have:
-
-- Requirement one (for example, Node.js 18+, a free account, an API key)
-- Requirement two (for example, a compatible device, a compatible browser, a compatible operating system)
-
-## Get started
+This quickstart walks you through completing your very first FRC Academy lesson: declaring a NEO brushless motor using the REV Robotics `SparkMax` API. You will open the app, navigate to the correct lesson, choose Guided mode, type your code in the interactive editor, and verify it — all in under five minutes. No robot, no wiring, and no IDE setup required.
 
 <Steps>
-  <Step title="Install">
-    Describe how to install your product or sign up.
-
-    ```bash
-    npm install your-package
-    ```
+  <Step title="Open FRC Academy">
+    Visit [https://holden9607.github.io/FRC-Academy/](https://holden9607.github.io/FRC-Academy/) in any modern browser (Chrome, Firefox, Edge, or Safari). If you prefer the desktop experience, launch the `FRC-Academy.exe` from your extracted download folder instead. You will land on the main menu showing the **FRC Code Academy** title and two learning path buttons.
   </Step>
-  <Step title="Configure">
-    Describe any setup or configuration needed before first use.
-
-    ```bash
-    your-cli init
-    ```
+  <Step title="Select Motors">
+    Click the **Motors** button from the main menu. This takes you to the Teaching View and opens the motor type selection screen in the instructions panel on the right.
   </Step>
-  <Step title="Run it">
-    Show the first thing a user does to see it working.
-
-    ```bash
-    your-cli start
-    ```
+  <Step title="Choose NEO Motor (REV)">
+    Click **NEO Motor (REV)** from the motor type menu. This selects the REV Robotics `SparkMax` hardware target and loads the lesson list for NEO motors.
+  </Step>
+  <Step title="Select '1. Define a Motor'">
+    Click **1. Define a Motor** from the lesson menu. This is the foundational lesson — you will learn how to properly import and declare a `SparkMax` object inline inside a robot class.
+  </Step>
+  <Step title="Choose Guided Lesson">
+    Click **Guided Lesson** from the lesson type menu. Guided mode provides a step-by-step floating popup that shows you exactly what code to type at each stage, making it ideal for your first time through a lesson.
+  </Step>
+  <Step title="Follow the guided steps">
+    A floating **Guided Step** popup appears in the bottom-right corner of the editor panel. It shows the current step number (e.g., "1 / 4") alongside a written instruction and a code snippet to type. Read each step carefully, type the shown code into the editor, then click **Next Step** to advance. The steps for this lesson walk you through the import statements and the motor field declaration.
+  </Step>
+  <Step title="Click 'Start Coding'">
+    Click the **Start Coding** button at the bottom of the instructions panel. This loads a code skeleton into the editor and makes it editable. The skeleton includes the correct imports and class structure with `// TODO` comments showing where your code belongs. Type your motor declaration to fill in the missing parts.
+  </Step>
+  <Step title="Click 'Verify Code'">
+    When you have filled in the code, click the **Verify Code** button. The Code Review modal opens with a line-by-line diagnostic view of your submission. Each line of your code is highlighted according to correctness — read the results and see how you did.
   </Step>
 </Steps>
 
-<Tip>
-  Give people a way to get help. This could be a link to a support page, a chat with a customer support agent, or a forum for your product.
+After successfully completing the lesson, your final code should look like this:
 
-  Example: Need help? Reach out to us at [support@yourcompany.com](mailto:support@yourcompany.com).
+```java RobotContainer.java
+import com.revrobotics.spark.SparkMax;
+import com.revrobotics.spark.SparkLowLevel.MotorType;
+
+public class RobotContainer {
+    private final SparkMax m_motor = new SparkMax(1, MotorType.kBrushless);
+}
+```
+
+The motor is declared as a `private final` field, instantiated inline with CAN ID `1` and `MotorType.kBrushless` — the correct type for a NEO brushless motor.
+
+## Understanding the Code Review
+
+The Code Review modal shows your submitted code with every line color-coded by the diagnostic engine:
+
+- **Green (✓)** — the line matches the expected solution exactly (trimmed whitespace is ignored)
+- **Red (✕)** — the line is incorrect, missing from the solution, or contains a syntax mistake
+- **Blue (/)** — the line is a comment; comments are styled separately to distinguish them from logic errors
+
+If your submission is perfect, a **"Code is Correct!"** success banner appears at the bottom of the modal with options to return to the main menu or go back to the motor selection screen.
+
+<Tip>
+  Click **View Solution** to open the reference answer with your own lines highlighted. Lines you got right are shown in green; lines you missed or wrote incorrectly are shown in red. This makes it easy to spot exactly where your code diverged from the expected answer without having to diff the two manually.
 </Tip>
+
+## Next Steps
+
+Now that you have completed your first lesson, explore the rest of FRC Academy's curriculum:
+
+<CardGroup cols={2}>
+  <Card
+    title="Activate a Motor"
+    icon="bolt"
+    href="/lessons/activate-motor"
+  >
+    Bind a controller button to run the motor at 50% speed and stop it on release using `RunCommand` and `InstantCommand`.
+  </Card>
+  <Card
+    title="Controllers Lesson"
+    icon="gamepad"
+    href="/learning-paths/controllers"
+  >
+    Declare `CommandXboxController` objects for driver and operator inputs on ports 0 and 1.
+  </Card>
+  <Card
+    title="Tank Drive (2 Motor)"
+    icon="car"
+    href="/lessons/tank-drive-2motor"
+  >
+    Build a full 2-motor arcade drive system with left/right motor inversion and `MathUtil.clamp` speed limits.
+  </Card>
+  <Card
+    title="All Lessons"
+    icon="list"
+    href="/lessons/define-motor"
+  >
+    Browse every available lesson for NEO, Kraken, and CIM motors across all four lesson types.
+  </Card>
+</CardGroup>

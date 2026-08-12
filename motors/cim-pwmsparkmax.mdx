@@ -1,0 +1,101 @@
+---
+title: "CIM Motor (PWMSparkMax) Setup and Programming"
+sidebarTitle: "CIM (PWMSparkMax)"
+description: "Learn to define and control a CIM brushed motor through a SPARK MAX in PWM mode using WPILib's built-in PWMSparkMax class. No vendor library required."
+---
+
+The **CIM motor** is a classic FRC workhorse — a brushed DC motor that has powered countless drivetrains over the years. When connected to a **SPARK MAX motor controller operating in PWM mode** (jumper installed), you can control it using WPILib's built-in `PWMSparkMax` class. No vendor library installation is required. This makes the CIM with `PWMSparkMax` the simplest motor setup in FRC and an ideal starting point for students new to robot programming.
+
+## Hardware Requirements
+
+Before writing code, make sure your hardware is configured correctly:
+
+- **CIM motor** wired to the SPARK MAX motor output leads
+- **SPARK MAX motor controller** with the **PWM jumper installed** (this enables PWM mode — without the jumper, SPARK MAX expects CAN communication)
+- **PWM cable** connected from the SPARK MAX signal port to a PWM header on the roboRIO
+
+No additional vendor library is needed — `PWMSparkMax` is included with every WPILib installation.
+
+## Required Imports
+
+Add this single import at the top of your `Robot.java` file:
+
+```java
+import edu.wpi.first.wpilibj.motorcontrol.PWMSparkMax;
+```
+
+<Note>
+  `PWMSparkMax` is part of WPILib — no additional vendor library installation is required. If you can see `edu.wpi.first.wpilibj` in your project, you already have everything you need.
+</Note>
+
+## Defining a CIM Motor
+
+Declare and instantiate a `PWMSparkMax` object inline as a private final field inside your `Robot` class. The constructor takes one argument: the **PWM port number** on the roboRIO.
+
+- **PWM port `0`** is the default used in all FRC Academy lessons. PWM ports are numbered 0 through 9 on the roboRIO.
+
+```java
+private final PWMSparkMax m_motor = new PWMSparkMax(0);
+```
+
+## Inverting a Motor
+
+`PWMSparkMax` implements WPILib's `MotorController` interface, which includes the `setInverted()` method. You can call it directly — no configuration object needed:
+
+```java
+m_rightMotor.setInverted(true);
+```
+
+Call this inside `robotInit()` for any motor that needs to spin in the opposite direction. In a standard tank drivetrain, inverting the right motor ensures both sides push the robot forward when given the same positive speed value.
+
+## Setting Motor Speed
+
+Use the `.set(double speed)` method to command motor output. The value must be between **-1.0** and **1.0**:
+
+- `1.0` = full speed forward
+- `0.0` = stop
+- `-1.0` = full speed reverse
+
+```java
+m_motor.set(0.5);   // 50% forward
+m_motor.set(0.0);   // stop
+m_motor.set(-0.5);  // 50% reverse
+```
+
+<Tip>
+  `PWMSparkMax` is a great starting motor for beginners because it uses WPILib's built-in `MotorController` interface with no extra setup. The `.set()`, `.setInverted()`, and `.stopMotor()` methods work identically across all WPILib motor controller classes.
+</Tip>
+
+## PWM vs CAN
+
+Understanding the difference between PWM and CAN mode will help you choose the right approach for your robot:
+
+| Feature | PWM Mode | CAN Mode |
+|---|---|---|
+| **Wiring** | Simple — one PWM cable to roboRIO | Requires CAN bus wiring |
+| **Vendor library** | Not required (WPILib built-in) | Required (REV or CTRE) |
+| **Telemetry** | None | Full — current, temperature, velocity |
+| **Current limiting** | Not available | Configurable in code |
+| **Encoder access** | Not available | Full encoder feedback |
+| **Best for** | Beginners, simple mechanisms | Drivetrains, advanced control |
+
+For learning the basics of robot programming, **CIM / PWMSparkMax is the easiest starting point** — you get a working motor with zero vendor library setup. Once you're comfortable, consider upgrading to CAN-based motors (NEO or Kraken) to unlock the full feature set.
+
+## Available Lessons
+
+FRC Academy includes four hands-on coding lessons for the CIM motor with PWMSparkMax. Each lesson builds on the previous one, from a single motor declaration to a full four-motor arcade drivetrain.
+
+<CardGroup cols={2}>
+  <Card title="1. Define a Motor" icon="microchip" href="/lessons/define-motor">
+    Declare and instantiate a `PWMSparkMax` object on PWM port `0`.
+  </Card>
+  <Card title="2. Activate a Single Motor" icon="bolt" href="/lessons/activate-motor">
+    Bind `.set(0.5)` to the operator controller's B button using `whileTrue` and `onFalse` command bindings.
+  </Card>
+  <Card title="3. 2 Motor Tank Drive" icon="car" href="/lessons/tank-drive-2motor">
+    Declare left (port 0) and right (port 1) motors, invert the right side with `setInverted(true)`, and implement arcade drive in `teleopPeriodic()`.
+  </Card>
+  <Card title="4. 4 Motor Tank Drive" icon="truck" href="/lessons/tank-drive-4motor">
+    Extend to four motors using `.addFollower()`, configure right-side inversion, and drive with a `DifferentialDrive` object calling `arcadeDrive()`.
+  </Card>
+</CardGroup>

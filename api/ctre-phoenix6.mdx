@@ -1,0 +1,131 @@
+---
+title: "CTRE Phoenix 6 API: TalonFX, DutyCycleOut, Follower"
+sidebarTitle: "CTRE Phoenix 6"
+description: "Reference for CTRE Phoenix 6 classes in FRC Academy Kraken lessons: TalonFX motor controller, DutyCycleOut output control, and Follower for multi-motor gearboxes."
+---
+
+CTRE Phoenix 6 is the vendor library for Kraken x60 and Falcon 500 motors. FRC Academy's Kraken lessons use `TalonFX`, `DutyCycleOut`, and `Follower` from this library to demonstrate the Phoenix 6 control request model — where motor outputs are sent as typed request objects rather than raw numeric calls, giving you a precise and extensible command pipeline from the start.
+
+## com.ctre.phoenix6.hardware.*
+
+### TalonFX
+
+**Full class:** `com.ctre.phoenix6.hardware.TalonFX`
+
+The primary motor controller class for CTRE Kraken x60 and Falcon 500 motors. Unlike simpler motor APIs, `TalonFX` uses a control-request pattern: you construct a request object (like `DutyCycleOut`) and pass it to `setControl()`, which lets you swap control modes at runtime without re-wiring your code.
+
+**Constructor**
+
+```java
+new TalonFX(int deviceID, String canbus)
+```
+
+| Parameter  | Type     | Description                                                                       |
+|------------|----------|-----------------------------------------------------------------------------------|
+| `deviceID` | `int`    | CAN ID of the TalonFX controller (e.g. `1`)                                       |
+| `canbus`   | `String` | CAN bus name — use your CANivore's name (e.g. `"DINO"`) or `""` for roboRIO CAN |
+
+**Key Methods**
+
+| Method | Returns | Description |
+|--------|---------|-------------|
+| `setControl(ControlRequest request)` | `void` | Sends a typed control request (e.g. `DutyCycleOut`, `Follower`) to the controller |
+| `getDeviceID()` | `int` | Returns the CAN ID of this TalonFX |
+| `setNeutralMode(NeutralModeValue mode)` | `void` | Sets brake or coast behavior when output is zero |
+
+**Example**
+
+```java
+import com.ctre.phoenix6.hardware.TalonFX;
+import com.ctre.phoenix6.controls.DutyCycleOut;
+
+private final TalonFX m_motor = new TalonFX(1, "DINO");
+m_motor.setControl(new DutyCycleOut(0.5)); // 50% forward
+```
+
+---
+
+## com.ctre.phoenix6.controls.*
+
+### DutyCycleOut
+
+**Full class:** `com.ctre.phoenix6.controls.DutyCycleOut`
+
+A direct output control request that sets a TalonFX's output as a simple duty-cycle percentage. This is the most straightforward control mode and the one used throughout FRC Academy's introductory Kraken lessons.
+
+**Constructor**
+
+```java
+new DutyCycleOut(double output)
+```
+
+| Parameter | Type     | Description                                                              |
+|-----------|----------|--------------------------------------------------------------------------|
+| `output`  | `double` | Duty cycle value: `-1.0` = full reverse, `0.0` = stop, `1.0` = full forward |
+
+**Usage Pattern in FRC Academy**
+
+Bind motor output to a controller button using the command-based trigger API:
+
+```java
+// While button is held: run at 50% — stop when released
+operatorController.b()
+    .whileTrue(new RunCommand(() -> m_motor.setControl(new DutyCycleOut(0.5))))
+    .onFalse(new RunCommand(() -> m_motor.setControl(new DutyCycleOut(0.0))));
+```
+
+---
+
+### Follower
+
+**Full class:** `com.ctre.phoenix6.controls.Follower`
+
+A control request that causes one TalonFX to continuously mirror another TalonFX (the master/leader). Once set, the follower automatically tracks the leader's output — you only need to command the leader motor in your teleop code.
+
+**Constructor**
+
+```java
+new Follower(int masterID, boolean opposeLeaderDirection)
+```
+
+| Parameter               | Type      | Description                                                                              |
+|-------------------------|-----------|------------------------------------------------------------------------------------------|
+| `masterID`              | `int`     | The device ID of the leader TalonFX to mirror                                            |
+| `opposeLeaderDirection` | `boolean` | `true` if the follower should spin opposite to the leader (e.g. physically reversed motor) |
+
+**2-Motor Tank Drive Example**
+
+```java
+// Right motor is mechanically mirrored — it must spin opposite to the left motor
+m_rightMotor.setControl(new Follower(m_leftMotor.getDeviceID(), true));
+// m_rightMotor will always mirror m_leftMotor but in reverse
+```
+
+**4-Motor Setup Example**
+
+```java
+// Each follower mirrors its side's leader exactly
+m_leftFollower.setControl(new Follower(m_leftMotor.getDeviceID(), false));
+m_rightFollower.setControl(new Follower(m_rightMotor.getDeviceID(), false));
+```
+
+<Warning>
+  CTRE Phoenix 6 is distributed via **Phoenix Tuner X** and may require a license for some advanced features such as Pro-tier closed-loop modes. The basic motor control API used in FRC Academy lessons — `TalonFX`, `DutyCycleOut`, and `Follower` — is available to all teams at no cost.
+</Warning>
+
+<Note>
+  The bus name `"DINO"` is specific to FRC Team 9607's CANivore. Replace it with your own team's CANivore name, or use an empty string `""` to target the default roboRIO CAN bus.
+</Note>
+
+---
+
+## Related Pages
+
+<CardGroup cols={2}>
+  <Card title="REV Robotics" icon="microchip" href="/api/rev-robotics">
+    SparkMax, SparkMaxConfig, and MotorType for SPARK MAX and NEO brushless motors.
+  </Card>
+  <Card title="Kraken Motor Guide" icon="circle-info" href="/motors/kraken-ctre">
+    Wiring, CAN configuration, and FRC Academy lesson walkthrough for Kraken x60 motors.
+  </Card>
+</CardGroup>

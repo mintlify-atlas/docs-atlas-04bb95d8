@@ -1,0 +1,150 @@
+---
+title: "WPILib Command Architecture: CommandXboxController, RunCommand"
+sidebarTitle: "Commands"
+description: "Reference for WPILib Command-Based classes used in FRC Academy: CommandXboxController button triggers, RunCommand inline lambdas, and InstantCommand one-shot execution."
+---
+
+FRC Academy lessons use WPILib's Command-Based architecture — specifically `CommandXboxController` for button-to-command binding and `RunCommand`/`InstantCommand` for inline motor control. This page covers the three command classes you'll encounter in every FRC Academy lesson.
+
+---
+
+### edu.wpi.first.wpilibj2.command.*
+
+The `command` package in `wpilibj2` is the heart of the Command-Based programming model. Instead of polling button states in a `periodic()` loop, you bind commands directly to controller triggers — WPILib schedules them automatically.
+
+#### CommandXboxController
+
+**Full class:** `edu.wpi.first.wpilibj2.command.CommandXboxController`
+
+`CommandXboxController` is a modern wrapper extending `XboxController` with Trigger-based event binding. Rather than reading `getBButton()` in a loop and writing `if` statements, you call `.b()` once and attach a command to it — the scheduler handles the rest.
+
+**Constructor:**
+
+```java
+new CommandXboxController(int port)
+```
+
+`port` is `0` for the driver controller or `1` for the operator controller (matches the USB port index in the Driver Station).
+
+**Button Trigger methods** — each returns a `Trigger` object you can chain commands onto:
+
+| Method | Button |
+|---|---|
+| `.a()` | A face button |
+| `.b()` | B face button |
+| `.x()` | X face button |
+| `.y()` | Y face button |
+| `.leftBumper()` | Left bumper (LB) |
+| `.rightBumper()` | Right bumper (RB) |
+| `.leftTrigger()` | Left trigger axis (LT) |
+| `.rightTrigger()` | Right trigger axis (RT) |
+| `.start()` | Start button |
+| `.back()` | Back / Select button |
+
+**Trigger binding methods** — chain these onto any button Trigger:
+
+| Method | Behavior |
+|---|---|
+| `.whileTrue(Command command)` | Runs the command continuously while the button is held |
+| `.onTrue(Command command)` | Runs the command once when the button is first pressed |
+| `.onFalse(Command command)` | Runs the command once when the button is released |
+| `.toggleOnTrue(Command command)` | Toggles the command on or off each time the button is pressed |
+
+**Axis read methods** — for use directly in `RunCommand` lambdas:
+
+| Method | Returns | Description |
+|---|---|---|
+| `.getLeftY()` | `double` | Left stick Y axis (−1.0 to 1.0, up = negative) |
+| `.getLeftX()` | `double` | Left stick X axis |
+| `.getRightY()` | `double` | Right stick Y axis |
+| `.getRightX()` | `double` | Right stick X axis |
+
+**Example — Activate Motor lesson (from FRC Academy):**
+
+```java
+operatorController.b()
+    .whileTrue(new RunCommand(() -> m_motor.set(0.5)))
+    .onFalse(new RunCommand(() -> m_motor.set(0.0)));
+```
+
+---
+
+#### RunCommand
+
+**Full class:** `edu.wpi.first.wpilibj2.command.RunCommand`
+
+`RunCommand` executes an inline lambda function repeatedly until terminated by an external signal (such as a button being released). It wraps any `Runnable` — including motor `set()` calls — so you can use it directly with Trigger binding.
+
+**Constructors:**
+
+```java
+new RunCommand(Runnable toRun)
+new RunCommand(Runnable toRun, Subsystem... requirements)
+```
+
+The optional `Subsystem` requirements argument registers this command with the scheduler so it interrupts other commands using the same subsystem.
+
+**Example — arcade drive inside a RunCommand:**
+
+```java
+new RunCommand(() -> {
+    double speed = -driverController.getLeftY();
+    double turn = driverController.getRightX();
+    m_leftMotor.set(speed + turn);
+    m_rightMotor.set(speed - turn);
+})
+```
+
+---
+
+#### InstantCommand
+
+**Full class:** `edu.wpi.first.wpilibj2.command.InstantCommand`
+
+`InstantCommand` runs an assigned code block exactly once, then finishes immediately. The scheduler marks it complete on the same loop tick it starts. This makes it perfect for one-shot actions where you don't want the command to linger.
+
+**Constructor:**
+
+```java
+new InstantCommand(Runnable toRun)
+```
+
+**Common use cases:**
+- Stopping a motor when a button is released
+- Resetting a sensor or encoder
+- Toggling a solenoid state
+
+**Example:**
+
+```java
+new InstantCommand(() -> m_motor.set(0.0))
+```
+
+---
+
+### whileTrue vs onFalse Pattern
+
+The motor-hold pattern is used throughout every FRC Academy motor lesson. It pairs `.whileTrue()` and `.onFalse()` on the same button to create a clean hold-to-run, release-to-stop behavior:
+
+```java
+// While button B is held: run motor at 50%
+// When button B is released: stop motor
+operatorController.b()
+    .whileTrue(new RunCommand(() -> m_motor.set(0.5)))
+    .onFalse(new RunCommand(() -> m_motor.set(0.0)));
+```
+
+When the button is released, WPILib interrupts the `whileTrue` command automatically, then immediately fires the `.onFalse()` command. The stop `RunCommand` runs once, sets the motor to `0.0`, and since nothing is keeping it running it ends on the next scheduler cycle. The result is a motor that runs at full speed exactly while the button is held and stops cleanly the moment the driver lets go.
+
+<Note>
+FRC Academy uses simplified `RobotContainer`-style structures directly inside `Robot.java` for teaching clarity. In a full robot project, motors and their associated commands are usually wrapped in dedicated `Subsystem` classes, and binding is done inside a `RobotContainer` class passed to the `CommandScheduler`.
+</Note>
+
+<CardGroup cols={2}>
+  <Card title="WPILib Core" icon="microchip" href="/api/wpilib-core">
+    TimedRobot, XboxController, DriverStation, PWMSparkMax, and the MotorController interface.
+  </Card>
+  <Card title="REV Robotics" icon="bolt" href="/api/rev-robotics">
+    SparkMax, SparkMaxConfig, MotorType, and the REV hardware configuration API.
+  </Card>
+</CardGroup>

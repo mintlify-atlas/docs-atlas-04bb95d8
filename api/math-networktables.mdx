@@ -1,0 +1,117 @@
+---
+title: "WPILib Utilities: MathUtil, PIDController, NetworkTable"
+sidebarTitle: "Utilities"
+description: "Reference for WPILib utility classes in FRC Academy: MathUtil for numeric clamping, PIDController for feedback control, and NetworkTable for telemetry and dashboard data."
+---
+
+WPILib includes utility classes that go beyond basic motor control. This page covers `MathUtil`, `PIDController`, and `NetworkTable` — tools you'll use as your robot code grows more sophisticated. While FRC Academy's introductory lessons focus on direct motor output, these classes become essential the moment you start handling real joystick drift, automated movement, or driver-station telemetry.
+
+## edu.wpi.first.math.*
+
+### MathUtil
+
+**Full class:** `edu.wpi.first.math.MathUtil`
+
+A static utility class that exposes helper methods to bounds-restrict and normalize numeric ranges gracefully. All methods are `static` — no instance is needed.
+
+**Key Static Methods**
+
+| Method | Returns | Description |
+|--------|---------|-------------|
+| `MathUtil.clamp(double value, double low, double high)` | `double` | Clamps `value` to the range `[low, high]` — values outside the range are pinned to the nearest bound |
+| `MathUtil.applyDeadband(double value, double deadband)` | `double` | Returns `0.0` if `|value| < deadband`; otherwise scales the remaining range to start from zero. Useful for joystick drift |
+| `MathUtil.inputModulus(double input, double minimumInput, double maximumInput)` | `double` | Wraps `input` within a continuous range — handy for angle arithmetic |
+
+**Example — Joystick Deadband**
+
+Joysticks rarely return exactly `0.0` when centered. Use `applyDeadband` to ignore small noise values and prevent the motors from creeping:
+
+```java
+import edu.wpi.first.math.MathUtil;
+
+double rawY = driverController.getLeftY();
+double speed = MathUtil.applyDeadband(rawY, 0.05); // ignore values under ±5%
+m_leftMotor.set(speed);
+```
+
+---
+
+### PIDController
+
+**Full class:** `edu.wpi.first.math.controller.PIDController`
+
+Calculates error-correction outputs using proportional, integral, and derivative gains. Feed it a sensor measurement and a target setpoint each loop cycle, and it returns the corrective output to apply to your motor.
+
+**Constructor**
+
+```java
+new PIDController(double kP, double kI, double kD)
+```
+
+| Parameter | Type     | Description                         |
+|-----------|----------|-------------------------------------|
+| `kP`      | `double` | Proportional gain — primary driving term |
+| `kI`      | `double` | Integral gain — corrects steady-state error over time |
+| `kD`      | `double` | Derivative gain — dampens oscillation |
+
+**Key Methods**
+
+| Method | Returns | Description |
+|--------|---------|-------------|
+| `calculate(double measurement, double setpoint)` | `double` | Returns the corrective output for this loop cycle |
+| `setTolerance(double positionTolerance)` | `void` | Defines the acceptable error window around the setpoint |
+| `atSetpoint()` | `boolean` | Returns `true` when the measurement is within the configured tolerance |
+| `reset()` | `void` | Clears the integral accumulator — call this before restarting a move |
+
+**Example**
+
+```java
+import edu.wpi.first.math.controller.PIDController;
+
+PIDController pid = new PIDController(0.1, 0.0, 0.01);
+double output = pid.calculate(encoder.getDistance(), targetDistance);
+m_motor.set(output);
+```
+
+---
+
+## edu.wpi.first.networktables.*
+
+### NetworkTable
+
+**Full class:** `edu.wpi.first.networktables.NetworkTable`
+
+The core data structure managing fast telemetry synchronization between the robot and driver station dashboards such as Shuffleboard and SmartDashboard. Data is organized into named tables, and each table holds key-value entries that stream live over the network.
+
+**Key Usage Pattern**
+
+```java
+import edu.wpi.first.networktables.NetworkTableInstance;
+import edu.wpi.first.networktables.NetworkTable;
+
+NetworkTable table = NetworkTableInstance.getDefault().getTable("MyRobot");
+table.getEntry("motorSpeed").setDouble(m_motor.get());
+```
+
+Call this inside `teleopPeriodic()` or `periodic()` to continuously push live values to the dashboard.
+
+<Tip>
+  Use `SmartDashboard.putNumber("motorSpeed", m_motor.get())` as a simpler one-liner alternative during development — it writes to the default NetworkTable under the hood, and the value appears instantly in Shuffleboard.
+</Tip>
+
+---
+
+<Note>
+  `MathUtil` and `PIDController` are not directly used in FRC Academy's current introductory lessons, but they are essential tools in any real FRC codebase. Expect to reach for them as soon as you start building autonomous routines or more precise teleop behaviors.
+</Note>
+
+## Related Pages
+
+<CardGroup cols={2}>
+  <Card title="WPILib Core" icon="robot" href="/api/wpilib-core">
+    TimedRobot, XboxController, DriverStation, and the foundational WPILib framework classes.
+  </Card>
+  <Card title="WPILib Commands" icon="list-check" href="/api/wpilib-commands">
+    CommandXboxController, RunCommand, InstantCommand, and the command-based architecture.
+  </Card>
+</CardGroup>

@@ -1,0 +1,134 @@
+---
+title: "WPILib Core Classes: TimedRobot, XboxController, DriverStation"
+sidebarTitle: "Core Framework"
+description: "Reference for WPILib core classes used in FRC Academy lessons: TimedRobot, XboxController, DriverStation, PWMSparkMax, and the MotorController interface."
+---
+
+WPILib is the official Java framework for FRC robots. FRC Academy lessons are built on WPILib's core classes — this page covers the primary framework classes you'll use and see in every lesson.
+
+---
+
+### edu.wpi.first.wpilibj.*
+
+These are the foundational classes found in every FRC robot project. They control how your robot boots, how it reads the driver's inputs, and how it communicates with the Field Management System.
+
+#### TimedRobot
+
+**Full class:** `edu.wpi.first.wpilibj.TimedRobot`
+
+`TimedRobot` is the primary skeleton controlling robot execution loops. Every FRC robot project extends this class — it provides the lifecycle hooks that WPILib calls automatically as the robot moves through different modes during a match.
+
+| Method | When it's called |
+|---|---|
+| `robotInit()` | Once when the robot powers on |
+| `teleopInit()` | When teleop mode starts |
+| `teleopPeriodic()` | Repeatedly (~50 Hz) during teleop |
+| `autonomousInit()` | When autonomous mode starts |
+| `autonomousPeriodic()` | Repeatedly during autonomous |
+
+```java
+public class Robot extends TimedRobot {
+    @Override
+    public void robotInit() {
+        // one-time setup
+    }
+
+    @Override
+    public void teleopPeriodic() {
+        // runs 50x per second during teleop
+    }
+}
+```
+
+---
+
+#### XboxController
+
+**Full class:** `edu.wpi.first.wpilibj.XboxController`
+
+`XboxController` reads raw directional axis vectors and hardware button states from a mapped layout device plugged into the Driver Station. You provide the USB port index (0 = driver, 1 = operator) in the constructor.
+
+| Method | Returns | Description |
+|---|---|---|
+| `getLeftY()` | `double` | Left stick Y axis (−1.0 to 1.0, up = negative) |
+| `getRightX()` | `double` | Right stick X axis |
+| `getAButton()` | `boolean` | A button state |
+| `getBButton()` | `boolean` | B button state |
+
+<Note>
+In FRC Academy lessons, the modern `CommandXboxController` is used instead of `XboxController` — it adds Trigger-based event binding so you can attach Commands directly to buttons. See the [Commands page](/api/wpilib-commands) for full details.
+</Note>
+
+---
+
+#### DriverStation
+
+**Full class:** `edu.wpi.first.wpilibj.DriverStation`
+
+`DriverStation` is the central network communication instance querying match details, alliance configurations, and game states. It provides static methods for interrogating the current robot mode during a match.
+
+| Method | Returns | Description |
+|---|---|---|
+| `isEnabled()` | `boolean` | Whether the robot is currently enabled |
+| `isTeleop()` | `boolean` | Whether the robot is in teleop mode |
+| `isAutonomous()` | `boolean` | Whether the robot is in autonomous mode |
+| `getAlliance()` | `Optional<Alliance>` | The robot's current alliance color |
+
+---
+
+### edu.wpi.first.wpilibj.motorcontrol.*
+
+The `motorcontrol` package contains WPILib's built-in motor controller classes. These are ideal when using standard PWM wiring rather than a CAN bus.
+
+#### PWMSparkMax
+
+**Full class:** `edu.wpi.first.wpilibj.motorcontrol.PWMSparkMax`
+
+`PWMSparkMax` controls a SPARK MAX motor controller utilizing standard PWM protocols. It is ideal for brushed motors like CIMs wired directly to the roboRIO PWM output ports.
+
+**Constructor:**
+
+```java
+new PWMSparkMax(int channel)
+```
+
+`channel` is the PWM port number on the roboRIO (0-based, matches the physical label on the board).
+
+| Method | Returns | Description |
+|---|---|---|
+| `set(double speed)` | `void` | Sets output power (−1.0 to 1.0) |
+| `setInverted(boolean isInverted)` | `void` | Inverts the output direction |
+| `get()` | `double` | Returns the current speed setting |
+| `stopMotor()` | `void` | Immediately stops the motor |
+
+```java
+private final PWMSparkMax m_motor = new PWMSparkMax(0);
+
+// In teleopPeriodic:
+m_motor.set(0.5); // 50% forward
+```
+
+---
+
+#### MotorController (interface)
+
+**Full interface:** `edu.wpi.first.wpilibj.motorcontrol.MotorController`
+
+`MotorController` is the interface implemented by all WPILib motor controllers. `PWMSparkMax` implements this interface, which means you can declare your field as `MotorController` for flexibility and swap implementations without changing your drive logic.
+
+The interface defines the following contract:
+
+| Method | Description |
+|---|---|
+| `set(double speed)` | Sets the motor output |
+| `setInverted(boolean isInverted)` | Inverts the motor direction |
+| `get()` | Returns the current output value |
+| `getInverted()` | Returns whether the output is inverted |
+| `stopMotor()` | Stops the motor output |
+| `disable()` | Disables the motor controller |
+
+---
+
+<Tip>
+For modern Command-Based robots (like those in FRC Academy lessons), use `CommandXboxController` instead of `XboxController` — it adds Trigger-based event binding that lets you attach `RunCommand` and `InstantCommand` instances directly to button presses without polling in a periodic loop.
+</Tip>

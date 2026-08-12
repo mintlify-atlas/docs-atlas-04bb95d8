@@ -1,0 +1,101 @@
+---
+title: "Motors Overview: NEO, Kraken, and CIM in FRC"
+sidebarTitle: "Motors Overview"
+description: "Compare the three motor types supported in FRC Academy — REV NEO, CTRE Kraken, and CIM via PWMSparkMax — and learn which Java classes and imports each requires."
+---
+
+FRC Academy teaches motor control through three real-world motor types used on FRC robots: the **REV NEO** (brushless, controlled via SPARK MAX over CAN), the **CTRE Kraken x60 / Falcon 500** (brushless, controlled via TalonFX over CAN), and the **CIM** (brushed, controlled via PWMSparkMax over PWM). Choosing the right motor type at the start of each lesson matters — each one requires a different vendor library, a different Java import, and a different constructor call. Picking the wrong type means your imports won't compile and your hardware won't respond.
+
+## Motor Comparison
+
+| Motor | Controller | Java Class | CAN/PWM | Vendor Library |
+|-------|------------|------------|---------|----------------|
+| NEO | SPARK MAX | `SparkMax` | CAN ID | REV Robotics |
+| Kraken x60 / Falcon 500 | Talon FX | `TalonFX` | CAN ID | CTRE Phoenix 6 |
+| CIM | SPARK MAX (PWM) | `PWMSparkMax` | PWM Port | WPILib built-in |
+
+## NEO (REV)
+
+The REV NEO is a brushless motor paired with the REV SPARK MAX motor controller. It communicates over the CAN bus and is identified by a **CAN ID** (starting at 1 by convention in FRC Academy lessons). The `SparkMax` class from the REV Robotics vendor library handles all hardware interaction — you must pass both a CAN ID and the `MotorType.kBrushless` enum to the constructor.
+
+**Required import:**
+
+```java
+import com.revrobotics.spark.SparkMax;
+import com.revrobotics.spark.SparkLowLevel.MotorType;
+```
+
+**Declaration example (CAN ID 1):**
+
+```java
+private final SparkMax m_motor = new SparkMax(1, MotorType.kBrushless);
+```
+
+The REV library also provides `SparkMaxConfig` for configuring inversion and follower behavior, and `ResetMode` / `PersistMode` enums for managing parameter persistence on the controller hardware.
+
+<Card title="NEO Motor Lessons" icon="bolt" href="/motors/neo-rev">
+  Step-by-step lessons for defining, activating, and driving with REV NEO motors
+</Card>
+
+## Kraken (CTRE)
+
+The CTRE Kraken x60 (and its predecessor, the Falcon 500) is a brushless motor integrated directly into a TalonFX motor controller housing. It communicates over the CAN bus using the **CTRE Phoenix 6** vendor library. The `TalonFX` class accepts a **CAN ID** and an optional CAN bus name string (FRC Academy lessons use `"DINO"` as the bus name). Motor output is applied using the `DutyCycleOut` control request rather than a simple `set()` call.
+
+**Required import:**
+
+```java
+import com.ctre.phoenix6.hardware.TalonFX;
+import com.ctre.phoenix6.controls.DutyCycleOut;
+```
+
+**Declaration example (CAN ID 1, bus "DINO"):**
+
+```java
+private final TalonFX m_motor = new TalonFX(1, "DINO");
+```
+
+Inversion is configured through `MotorOutputConfigs` and applied via the configurator API — not through a simple `setInverted()` call like older WPILib classes.
+
+<Card title="Kraken Motor Lessons" icon="bolt" href="/motors/kraken-ctre">
+  Step-by-step lessons for defining, activating, and driving with CTRE Kraken motors
+</Card>
+
+## CIM (PWMSparkMax)
+
+The CIM is a classic brushed DC motor and is one of the most historically common motors in FRC. In FRC Academy it is controlled via a SPARK MAX in **PWM mode** using the WPILib `PWMSparkMax` class — no vendor library installation required. Instead of a CAN ID, the constructor takes a **PWM port number** (0-based, matching the port on the roboRIO). The `set()` and `setInverted()` methods follow the standard WPILib `MotorController` interface.
+
+**Required import:**
+
+```java
+import edu.wpi.first.wpilibj.motorcontrol.PWMSparkMax;
+```
+
+**Declaration example (PWM port 0):**
+
+```java
+private final PWMSparkMax m_motor = new PWMSparkMax(0);
+```
+
+Because `PWMSparkMax` implements the `MotorController` interface, it also works with WPILib's `DifferentialDrive` class without any additional configuration wrappers.
+
+<Card title="CIM Motor Lessons" icon="bolt" href="/motors/cim-pwmsparkmax">
+  Step-by-step lessons for defining, activating, and driving with CIM motors via PWMSparkMax
+</Card>
+
+## All Motor Types at a Glance
+
+<CardGroup cols={3}>
+  <Card title="NEO (REV)" icon="bolt" href="/motors/neo-rev">
+    Brushless · CAN · `SparkMax` · REV vendor library required
+  </Card>
+  <Card title="Kraken / Falcon (CTRE)" icon="bolt" href="/motors/kraken-ctre">
+    Brushless · CAN · `TalonFX` · CTRE Phoenix 6 required
+  </Card>
+  <Card title="CIM (PWMSparkMax)" icon="bolt" href="/motors/cim-pwmsparkmax">
+    Brushed · PWM · `PWMSparkMax` · WPILib built-in, no vendor library
+  </Card>
+</CardGroup>
+
+<Note>
+  FRC Academy motor lessons automatically tailor guided steps, skeleton code, and solution code to your selected motor type. The same lesson structure — Define, Activate, 2 Motor Tank Drive, 4 Motor Tank Drive — appears for every motor, but the imports, constructor calls, and configuration APIs shown will always match the hardware you selected.
+</Note>

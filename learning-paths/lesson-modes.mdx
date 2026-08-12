@@ -1,0 +1,101 @@
+---
+title: "Guided vs Unguided: Choosing Your Lesson Mode"
+sidebarTitle: "Lesson Modes"
+description: "FRC Academy offers two lesson modes: Guided gives step-by-step code hints, Unguided gives a skeleton and lets you code freely. Learn when to use each mode."
+---
+
+After selecting a motor type and a lesson in FRC Academy, the app asks you to pick a **lesson mode** before the editor opens. This choice determines how much guidance you'll receive while coding. **Guided Mode** walks you through the solution one step at a time with inline code snippets. **Unguided Mode** drops you into a skeleton file and lets you write the solution from scratch. Both modes use the same code editor, the same Verify Code checker, and the same View Solution reference — only the amount of hand-holding differs.
+
+## Guided Mode
+
+When you select **Guided Lesson**, FRC Academy loads the skeleton file into the editor and immediately opens a floating popup in the bottom-right corner of the workspace. This popup is your step-by-step guide through the lesson.
+
+**How the popup works:**
+
+- The header shows your current progress as **"Guided Step X / Y"** (for example, `1 / 4` for the Controllers lesson).
+- Each step displays a plain-language instruction explaining *what* to type and *why*, followed by a code block showing the exact line or lines to add.
+- Clicking **Next Step** advances to the next instruction. On the final step, the button label changes to **Finish Guide**.
+- You can close the popup at any time by clicking the **×** button in the top-right corner of the popup — it won't lose your place or reset the code.
+
+**Example: Controllers lesson guided steps**
+
+| Step | Instruction | Code shown |
+|------|-------------|------------|
+| 1/4 | Import the CommandXboxController class from WPILib | `import edu.wpi.first.wpilibj2.command.CommandXboxController;` |
+| 2/4 | Declare a private final CommandXboxController named `driverController` on port 0 | `private final CommandXboxController driverController = new CommandXboxController(0);` |
+| 3/4 | Declare another CommandXboxController named `operatorController` on port 1 | `private final CommandXboxController operatorController = new CommandXboxController(1);` |
+| 4/4 | Click "Verify Code" when finished! | *(no code snippet — just the final check)* |
+
+Guided Mode is best for **beginners** or any time you're working with a new motor type or a lesson concept you haven't seen before.
+
+## Unguided Mode
+
+When you select **Unguided Lesson**, FRC Academy loads the skeleton file into the editor with no popup and no hints. The skeleton includes the correct imports and class/method structure with `// TODO` comments marking every spot where you need to write code — but it reveals nothing about what to type.
+
+**What you get:**
+
+```java
+import edu.wpi.first.wpilibj.TimedRobot;
+import edu.wpi.first.wpilibj2.command.CommandXboxController;
+
+public class Robot extends TimedRobot {
+    // TODO: Add controller declarations here
+
+    @Override
+    public void robotInit() { }
+}
+```
+
+From here, you write the full solution yourself from memory. If you want to start over, the **Reset Code** button in the editor toolbar restores the original skeleton exactly as it was when the lesson loaded.
+
+Unguided Mode is best for **practicing retention** after you've already completed the Guided version of a lesson, or for testing yourself before a competition or review.
+
+## Shared Features (Both Modes)
+
+Regardless of which mode you choose, all four of the following tools are always available in the editor:
+
+<CardGroup cols={2}>
+  <Card title="Verify Code" icon="check" href="/lessons/define-motor">
+    Opens the **Code Review** modal with a line-by-line diagnostic. Each line in your code is highlighted green (correct) or red (error/missing), and a legend on the right explains the color coding. If every line matches the reference solution, a "Code is Correct!" success banner appears.
+  </Card>
+  <Card title="View Solution" icon="eye" href="/lessons/define-motor">
+    Opens the **Code Solution** modal showing the complete reference solution. Lines you already have correct are highlighted green; lines you're missing or have wrong are highlighted red. Use this to see exactly what you need to add without closing the modal and manually correcting your editor.
+  </Card>
+  <Card title="Reset Code" icon="rotate" href="/lessons/define-motor">
+    Restores the editor to the original skeleton for the current lesson, discarding any changes you've made. In Guided Mode, this also re-opens the guided popup from Step 1. Use this if you've accidentally broken the class structure and want a clean start.
+  </Card>
+  <Card title="API Libraries" icon="book" href="/api/wpilib-core">
+    Opens the built-in **API Reference** browser, a tabbed panel covering all four vendor namespaces used in FRC Academy lessons: Core WPILib, REV Robotics, CTRE Phoenix 6, and Math/Utilities. Browse class names, constructor signatures, and descriptions without leaving the app.
+  </Card>
+</CardGroup>
+
+## Code Review Diagnostics
+
+When you click **Verify Code** or **View Solution**, FRC Academy compares your code to the reference solution line by line (trimming whitespace before comparing). The result is displayed in the Code Review modal using three highlight colors:
+
+| Color | Symbol | Meaning |
+|-------|--------|---------|
+| Green | `✓` | The line is correct — it matches the reference solution |
+| Red | `✕` | The line has errors, wrong content, or is missing entirely |
+| Blue / italic | `/` | The line is a comment |
+
+**Example diagnostic output:**
+
+```java
+import edu.wpi.first.wpilibj.TimedRobot;              // ✓ green
+import edu.wpi.first.wpilibj2.command.CommandXboxController;  // ✓ green
+                                                       // ✓ green (blank line)
+public class Robot extends TimedRobot {                // ✓ green
+    private final CommandXboxController driverController = new CommandXboxController(0);  // ✓ green
+    private final CommandXboxController operatorcontroller = new CommandXboxController(1); // ✕ red — lowercase 'c'
+```
+
+<Note>
+  Code Review uses **partial credit** — it evaluates every line independently. A single typo on one declaration won't mark the entire file as wrong. You can see exactly which lines are correct and which need fixing, making it easy to zero in on the one problem without rewriting everything.
+</Note>
+
+If every line in your submission matches the reference solution exactly, the **"Code is Correct!"** success banner appears at the bottom of the modal with a checkmark icon and options to return to the main menu or navigate to the next lesson.
+
+<Tip>
+  Start with **Guided Mode** on your first attempt at any new lesson — the step-by-step popup helps you build correct muscle memory for imports and constructor syntax. Then switch to **Unguided Mode** on your second attempt to test whether the pattern has stuck.
+</Tip>

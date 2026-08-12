@@ -1,0 +1,145 @@
+---
+title: "Lesson 3: 2-Motor Arcade Tank Drive"
+sidebarTitle: "2-Motor Tank Drive"
+description: "Build a 2-motor arcade-style tank drive in FRC Java. Configure left and right motors, invert the right side, and bind joystick axes to forward speed and turning."
+---
+
+Arcade tank drive controls a differential drivetrain using two joystick axes — the left stick's Y axis for forward/reverse speed and the right stick's X axis for turning. This lesson implements a complete 2-motor arcade drive from scratch: you'll declare a left and right motor, invert the right side so both motors push the robot in the same direction, and bind joystick input to the drive loop using a `RunCommand` default command.
+
+## What You'll Learn
+
+- How to declare two motors (`m_leftMotor` and `m_rightMotor`) for a differential drivetrain
+- Why the right-side motor must be inverted and how to do it for each motor type
+- How to read joystick axes with `getLeftY()` and `getRightX()` from `CommandXboxController`
+- The arcade drive math formula: `leftOutput = speed + turn`, `rightOutput = speed - turn`
+- How to set a `RunCommand` as the default command so it runs automatically during teleop
+
+## Arcade Drive Math
+
+Arcade drive combines a single forward/backward speed value with a rotation value to produce independent left and right motor outputs:
+
+```java
+double speed = -driverController.getLeftY(); // negate: up = positive
+double turn = driverController.getRightX();
+double leftOutput = speed + turn;
+double rightOutput = speed - turn;
+```
+
+- **Straight forward**: `turn = 0` → both sides get the same speed.
+- **Turn right**: `turn > 0` → left side speeds up, right side slows down → robot arcs right.
+- **Turn left**: `turn < 0` → right side speeds up, left side slows down → robot arcs left.
+- **Spin in place**: `speed = 0`, `turn ≠ 0` → one side drives forward, the other reverse.
+
+<Note>
+  The left Y axis is **negated** (`-driverController.getLeftY()`) because WPILib follows joystick convention: pushing the stick forward produces a **negative** value. Negating it converts "up = positive," which is the expected behavior for forward drive.
+</Note>
+
+## Solution (NEO Example)
+
+<Tabs>
+  <Tab title="NEO (SparkMax)">
+    The right motor is inverted via `SparkMaxConfig` so that both motors push the robot forward when given a positive setpoint. The drive loop lives in a `RunCommand` registered as the default command on the drive subsystem.
+
+    ```java
+    import com.revrobotics.spark.SparkMax;
+    import com.revrobotics.spark.SparkLowLevel.MotorType;
+    import com.revrobotics.spark.config.SparkMaxConfig;
+    import com.revrobotics.spark.SparkBase.ResetMode;
+    import com.revrobotics.spark.SparkBase.PersistMode;
+    import edu.wpi.first.wpilibj2.command.CommandXboxController;
+    import edu.wpi.first.wpilibj2.command.RunCommand;
+
+    public class RobotContainer {
+        private final SparkMax m_leftMotor = new SparkMax(1, MotorType.kBrushless);
+        private final SparkMax m_rightMotor = new SparkMax(2, MotorType.kBrushless);
+        private final CommandXboxController driverController = new CommandXboxController(0);
+
+        public RobotContainer() {
+            SparkMaxConfig rightConfig = new SparkMaxConfig();
+            rightConfig.inverted(true);
+            m_rightMotor.configure(rightConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
+
+            CommandScheduler.getInstance().setDefaultCommand(
+                driveSubsystem,
+                new RunCommand(() -> {
+                    double speed = -driverController.getLeftY();
+                    double turn = driverController.getRightX();
+                    m_leftMotor.set(speed + turn);
+                    m_rightMotor.set(speed - turn);
+                })
+            );
+        }
+    }
+    ```
+  </Tab>
+</Tabs>
+
+## Motor Inversion
+
+On a differential drivetrain, the left and right motors face **opposite directions** — if you send both the same positive setpoint, the robot will spin in place instead of driving straight. Inverting one side corrects this so a positive value always means "push the robot forward."
+
+The method for inverting differs by motor type:
+
+**NEO (SparkMax) — Configuration API**
+
+REV SPARK MAX uses the `SparkMaxConfig` object. You create a config, call `.inverted(true)`, then apply it with `.configure()`:
+
+```java
+SparkMaxConfig rightConfig = new SparkMaxConfig();
+rightConfig.inverted(true);
+m_rightMotor.configure(rightConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
+```
+
+`ResetMode.kResetSafeParameters` clears previous settings before applying. `PersistMode.kPersistParameters` saves the configuration to the controller's flash memory so it survives a power cycle.
+
+**Kraken (TalonFX) — MotorOutputConfigs**
+
+CTRE Phoenix 6 uses a `MotorOutputConfigs` object applied via the device configurator:
+
+```java
+var rightConfig = new MotorOutputConfigs();
+rightConfig.Inverted = InvertedValue.Clockwise_Positive;
+m_rightMotor.getConfigurator().apply(rightConfig);
+```
+
+**CIM (PWMSparkMax) — setInverted()**
+
+PWM controllers use WPILib's simpler `setInverted()` method directly on the motor object:
+
+```java
+m_rightMotor.setInverted(true);
+```
+
+## In FRC Academy
+
+To reach this lesson in the app:
+
+<Steps>
+  <Step title="Open the Main Menu">
+    Launch FRC Academy and click **Motors** from the main menu.
+  </Step>
+  <Step title="Select a motor type">
+    Choose **NEO**, **Kraken**, or **CIM**.
+  </Step>
+  <Step title="Open Lesson 3">
+    Select **3. 2 Motor Tank Drive (Arcade)** from the lesson list.
+  </Step>
+  <Step title="Choose a mode">
+    Pick **Guided Mode** or **Unguided Mode** and start coding.
+  </Step>
+</Steps>
+
+<Tip>
+  Always test your drivetrain direction on the ground (or with the robot elevated) before a match. If the robot spins in place when you push the stick forward, your inversion is backwards. If it drives in the wrong direction entirely, check which side you inverted.
+</Tip>
+
+---
+
+<CardGroup cols={2}>
+  <Card title="4-Motor Tank Drive →" icon="car-side" href="/lessons/tank-drive-4motor">
+    Lesson 4 — Add follower motors to each drivetrain side for a full 4-motor arcade drive setup.
+  </Card>
+  <Card title="← Activate a Motor" icon="bolt" href="/lessons/activate-motor">
+    Lesson 2 — Bind a controller button to run a single motor at 50% speed.
+  </Card>
+</CardGroup>

@@ -1,0 +1,113 @@
+---
+title: "Lesson 2: Activate a Motor with a Controller Button"
+sidebarTitle: "Activate a Motor"
+description: "Bind an Xbox controller button B to run a single motor at 50% speed using CommandXboxController, whileTrue(), onFalse(), and RunCommand in FRC Java."
+---
+
+Building on the motor definition from Lesson 1, this lesson wires your motor to an Xbox controller button so it runs while the button is held and automatically stops the moment it is released. This pattern is foundational in FRC Command-Based programming — almost every operator-controlled mechanism on a robot uses the same `whileTrue` / `onFalse` binding structure.
+
+## What You'll Learn
+
+- How to create a `CommandXboxController` and which port number the operator controller uses
+- How to retrieve a `Trigger` from a specific button (button B in this lesson)
+- The difference between `.whileTrue()` and `.onFalse()` and why you need both
+- How to write an inline `RunCommand` lambda to set motor speed on the fly
+- The motor speed range: `-1.0` (full reverse) → `0.0` (stopped) → `1.0` (full forward)
+
+## Solution (NEO Example)
+
+<Tabs>
+  <Tab title="NEO (SparkMax)">
+    The full solution adds a `CommandXboxController` field and wires button B inside the `RobotContainer` constructor. The motor runs at 50% forward while B is held and stops when B is released.
+
+    ```java
+    import com.revrobotics.spark.SparkMax;
+    import com.revrobotics.spark.SparkLowLevel.MotorType;
+    import edu.wpi.first.wpilibj2.command.CommandXboxController;
+    import edu.wpi.first.wpilibj2.command.RunCommand;
+
+    public class RobotContainer {
+        private final SparkMax m_motor = new SparkMax(1, MotorType.kBrushless);
+        private final CommandXboxController operatorController = new CommandXboxController(1);
+
+        public RobotContainer() {
+            operatorController.b()
+                .whileTrue(new RunCommand(() -> m_motor.set(0.5)))
+                .onFalse(new RunCommand(() -> m_motor.set(0.0)));
+        }
+    }
+    ```
+  </Tab>
+</Tabs>
+
+## Key Concepts
+
+**`operatorController.b()`**
+Calling `.b()` on a `CommandXboxController` returns a `Trigger` object that is active (true) whenever the B button is physically pressed. You chain `.whileTrue()` and `.onFalse()` directly onto this trigger.
+
+**`.whileTrue(command)`**
+Schedules the given command every scheduler cycle while the trigger condition is true (i.e., while the button stays held). When the button is released the command is interrupted.
+
+**`.onFalse(command)`**
+Schedules the given command on the falling edge — the instant the trigger transitions from true to false (button released). This is how you ensure the motor is explicitly commanded to stop rather than just holding its last setpoint.
+
+**`new RunCommand(() -> m_motor.set(0.5))`**
+`RunCommand` is a lightweight WPILib command that runs a single lambda (anonymous function) repeatedly while active. The lambda `() -> m_motor.set(0.5)` sets the motor output to 50% forward every scheduler tick.
+
+**Speed range**
+Motor `set()` accepts a `double` from `-1.0` to `1.0`:
+
+| Value | Behavior |
+|-------|----------|
+| `1.0` | Full speed forward |
+| `0.5` | 50% speed forward |
+| `0.0` | Stopped |
+| `-0.5` | 50% speed reverse |
+| `-1.0` | Full speed reverse |
+
+## CTRE Equivalent
+
+If you are using a Kraken (TalonFX) instead of a NEO, the motor API differs — you use a `DutyCycleOut` control request instead of `.set()`:
+
+```java
+// Kraken equivalent:
+operatorController.b()
+    .whileTrue(new RunCommand(() -> m_motor.setControl(new DutyCycleOut(0.5))))
+    .onFalse(new RunCommand(() -> m_motor.setControl(new DutyCycleOut(0.0))));
+```
+
+`DutyCycleOut` is a Phoenix 6 control request that commands a duty-cycle percentage, equivalent in behavior to REV's `.set()`. Remember to add `import com.ctre.phoenix6.controls.DutyCycleOut;` at the top of your file.
+
+## In FRC Academy
+
+To reach this lesson in the app:
+
+<Steps>
+  <Step title="Open the Main Menu">
+    Launch FRC Academy and click **Motors** from the main menu.
+  </Step>
+  <Step title="Select a motor type">
+    Choose **NEO**, **Kraken**, or **CIM**.
+  </Step>
+  <Step title="Open Lesson 2">
+    Select **2. Activate a Single Motor** from the lesson list.
+  </Step>
+  <Step title="Choose a mode">
+    Pick **Guided Mode** or **Unguided Mode** and start writing.
+  </Step>
+</Steps>
+
+<Tip>
+  The **operator controller** is always port `1` in FRC Academy motor lessons. The **driver controller** is port `0` and is used in the drivetrain lessons (Tank Drive). Make sure you pass the correct port when constructing each `CommandXboxController`.
+</Tip>
+
+---
+
+<CardGroup cols={2}>
+  <Card title="← Define a Motor" icon="plug" href="/lessons/define-motor">
+    Lesson 1 — Declare the motor hardware object with the correct import and constructor arguments.
+  </Card>
+  <Card title="2-Motor Tank Drive →" icon="car" href="/lessons/tank-drive-2motor">
+    Lesson 3 — Control two motors with joystick axes to drive a differential drivetrain.
+  </Card>
+</CardGroup>

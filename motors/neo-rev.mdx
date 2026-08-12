@@ -1,0 +1,101 @@
+---
+title: "NEO Motor (REV Robotics) Setup and Programming"
+sidebarTitle: "NEO (REV)"
+description: "Learn to define, configure, and drive a REV NEO brushless motor using SparkMax and the REV Robotics vendor library. Includes import paths and CAN ID setup."
+---
+
+The REV NEO is one of the most popular brushless motors in FRC, prized for its compact size and high efficiency. It is controlled through the **SPARK MAX** motor controller over a **CAN bus** connection, and requires the **REV Robotics vendor library** to be installed in your WPILib project. Unlike PWM-based controllers, the CAN interface gives you access to telemetry, current limiting, encoder data, and configuration persistence — all from code.
+
+## Hardware Requirements
+
+Before writing any code, make sure you have the following hardware and software ready:
+
+- **SPARK MAX motor controller** (REV-11-2158) wired to your CAN bus
+- **NEO brushless motor** (REV-21-1650) connected to the SPARK MAX
+- **CAN bus connection** from the SPARK MAX to the roboRIO (or through a CAN chain)
+- **REV Robotics vendor library** installed in your WPILib project (via the WPILib VS Code extension or `vendordeps` folder)
+
+## Required Imports
+
+Add these imports at the top of your `Robot.java` file to access the SPARK MAX hardware class and motor type enumeration:
+
+```java
+import com.revrobotics.spark.SparkMax;
+import com.revrobotics.spark.SparkLowLevel.MotorType;
+```
+
+These come from the REV Robotics vendor library. If you see red underlines, confirm the vendor library JSON file is present in your project's `vendordeps` folder.
+
+## Defining a NEO Motor
+
+Declare and instantiate a `SparkMax` object inline as a private final field inside your `Robot` class. The constructor takes two arguments: the **CAN ID** and the **motor type**.
+
+- **CAN ID `1`** is the default used in all FRC Academy lessons. On a real robot, every motor controller must have a unique CAN ID.
+- **`MotorType.kBrushless`** tells the SPARK MAX that a brushless NEO (not a brushed CIM) is connected.
+
+```java
+private final SparkMax m_motor = new SparkMax(1, MotorType.kBrushless);
+```
+
+<Note>
+  CAN ID `1` is used in FRC Academy lessons by default. In a real robot project, assign unique CAN IDs to each motor controller using the REV Hardware Client before deploying code.
+</Note>
+
+## Inverting a Motor (for Tank Drive)
+
+In a two-motor drivetrain, the left and right motors face opposite directions. Without inversion, both motors spin the same way and the robot spins in a circle instead of driving straight. For the **SPARK MAX**, inversion is applied through a `SparkMaxConfig` object — not a simple method call.
+
+You will need three additional imports:
+
+```java
+import com.revrobotics.spark.config.SparkMaxConfig;
+import com.revrobotics.spark.SparkBase.ResetMode;
+import com.revrobotics.spark.SparkBase.PersistMode;
+```
+
+Then, inside `robotInit()`, configure and apply inversion to the right motor:
+
+```java
+SparkMaxConfig rightConfig = new SparkMaxConfig();
+rightConfig.inverted(true);
+m_rightMotor.configure(rightConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
+```
+
+`ResetMode.kResetSafeParameters` clears any previously stored settings before applying the new ones, and `PersistMode.kPersistParameters` saves the configuration to the SPARK MAX's flash memory so it survives a power cycle.
+
+## Setting Motor Speed
+
+Use the `.set(double speed)` method to command the motor to a speed. The value must be between **-1.0** and **1.0**, where:
+
+- `1.0` = full speed forward
+- `0.0` = stop
+- `-1.0` = full speed reverse
+
+```java
+m_motor.set(0.5);   // 50% forward
+m_motor.set(0.0);   // stop
+m_motor.set(-0.5);  // 50% reverse
+```
+
+<Tip>
+  Use REV Hardware Client to configure and test your SPARK MAX — check firmware version, set CAN IDs, and verify motor spin direction — before writing any robot code.
+</Tip>
+
+## Available Lessons
+
+FRC Academy includes four hands-on coding lessons for the NEO motor. Each lesson builds on the previous one, starting with a simple motor declaration and progressing to a full four-motor arcade drivetrain.
+
+<CardGroup cols={2}>
+  <Card title="1. Define a Motor" icon="microchip" href="/lessons/define-motor">
+    Declare and instantiate a `SparkMax` object with CAN ID 1 and `MotorType.kBrushless`.
+  </Card>
+  <Card title="2. Activate a Single Motor" icon="bolt" href="/lessons/activate-motor">
+    Bind a motor to the operator controller's B button using `whileTrue` and `onFalse` command bindings.
+  </Card>
+  <Card title="3. 2 Motor Tank Drive" icon="car" href="/lessons/tank-drive-2motor">
+    Add a left and right motor, invert the right side using `SparkMaxConfig`, and implement arcade drive in `teleopPeriodic()`.
+  </Card>
+  <Card title="4. 4 Motor Tank Drive" icon="truck" href="/lessons/tank-drive-4motor">
+    Extend to four motors using follower configuration with `SparkMaxConfig.follow()` and a `DifferentialDrive` object.
+  </Card>
+</CardGroup>

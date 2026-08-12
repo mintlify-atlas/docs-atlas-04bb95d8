@@ -1,0 +1,76 @@
+---
+title: "FRC Academy: Interactive FRC Robot Coding Training"
+sidebarTitle: "Introduction"
+description: "FRC Academy is an interactive coding trainer for FIRST Robotics Competition students. Practice real robot code for NEO, Kraken, and CIM motors with instant feedback."
+---
+
+FRC Academy is a student-built, interactive coding trainer designed for FIRST Robotics Competition teams. Whether you are writing your first line of robot code or refreshing your skills before the build season kicks off, FRC Academy walks you through real Java robot code for motor control and controller mapping — all without needing a physical robot. You type real code, receive instant line-by-line feedback, and build confidence in the same APIs your team will use on competition day.
+
+## What is FRC Academy?
+
+FRC Academy is a browser-based and desktop training tool created by Holden on **FRC Team 9607, the RJR CyberDemons**. It runs real robot code logic locally and gives students hands-on practice with motor declarations, driver input binding, and drivetrain patterns using WPILib, REV Robotics, and CTRE Phoenix 6.
+
+The tool is available in two ways:
+
+- **Web App** — always up to date, no install required: [https://holden9607.github.io/FRC-Academy/](https://holden9607.github.io/FRC-Academy/)
+- **Desktop App** — a downloadable Windows `.exe` available from the [GitHub Releases page](https://github.com/Holden9607/FRC-Academy/releases/latest)
+
+Supported motor types include **NEO (REV)**, **Kraken (CTRE)**, and **CIM (PWMSparkMax)** — the three most common motors found on FRC robots today.
+
+## Who is this for?
+
+FRC Academy is built for anyone on an FRC team who works with robot code, at any experience level:
+
+- **New FRC programmers** who want a guided, mistake-friendly environment to learn motor declarations, CAN IDs, and controller bindings before touching the real robot
+- **Veteran students** who want to quickly refresh their knowledge of REV or CTRE APIs before the season starts — muscle memory for import statements and configuration patterns matters
+- **Mentors and coaches** who want a structured, self-paced tool to introduce programming concepts to new team members without requiring a full robot setup
+
+## What you'll learn
+
+<CardGroup cols={2}>
+  <Card
+    title="Controllers"
+    icon="gamepad"
+    href="/learning-paths/controllers"
+  >
+    Map Xbox controller axes and buttons to robot actions using WPILib's `CommandXboxController` and command bindings.
+  </Card>
+  <Card
+    title="Motors"
+    icon="gears"
+    href="/learning-paths/motors-overview"
+  >
+    Declare, configure, and drive NEO, Kraken, and CIM motors using the correct vendor APIs for each hardware type.
+  </Card>
+  <Card
+    title="Lesson Modes"
+    icon="chalkboard-teacher"
+    href="/learning-paths/lesson-modes"
+  >
+    Choose between Guided mode (step-by-step hints) and Unguided mode (blank slate) to match your current skill level.
+  </Card>
+  <Card
+    title="API Reference"
+    icon="book"
+    href="/api/wpilib-core"
+  >
+    Browse the built-in API reference covering WPILib, REV Robotics, and CTRE Phoenix classes used in every lesson.
+  </Card>
+</CardGroup>
+
+## Key features
+
+- **Interactive code editor** — type real Java robot code directly in the browser or desktop app; the editor mirrors what you would write in VS Code or IntelliJ
+- **Guided and Unguided modes** — Guided mode walks you through each step with a floating popup showing exactly what to type; Unguided mode drops you straight into the editor with only task instructions
+- **Line-by-line code review** — clicking "Verify Code" opens a Code Review modal that highlights every line green (correct), red (error or missing), or blue (comment)
+- **Solution reveal** — "View Solution" shows the reference answer with your matching lines highlighted in green and missing lines in red, so you can see exactly what you got right
+- **Built-in API reference browser** — the "API Libraries" button opens a searchable reference panel with tabs for WPILib Core, REV Robotics, CTRE Phoenix 6, and Utilities
+- **Available on web and desktop** — use the web version in any modern browser with no setup, or download the Windows `.exe` for offline use
+
+<Note>
+  The desktop app requires Java to be installed on your computer before it will open. **FRC Academy v1.1.0 and lower** require at least Java 8. **FRC Academy v2.0.0 and higher** require at least Java 21. See the [Installation page](/installation) for details.
+</Note>
+
+<Tip>
+  For the most up-to-date lessons and features, use the web version at [https://holden9607.github.io/FRC-Academy/](https://holden9607.github.io/FRC-Academy/). The desktop app may lag behind the latest release while updates are packaged.
+</Tip>

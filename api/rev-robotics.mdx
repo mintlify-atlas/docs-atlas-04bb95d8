@@ -1,0 +1,156 @@
+---
+title: "REV Robotics API: SparkMax, SparkMaxConfig, MotorType"
+sidebarTitle: "REV Robotics"
+description: "Reference for the REV Robotics vendor library classes used in FRC Academy NEO motor lessons: SparkMax, SparkMaxConfig, SparkLowLevel.MotorType, and SparkBase."
+---
+
+The REV Robotics vendor library provides the Java classes needed to control SPARK MAX motor controllers and NEO brushless motors over CAN. FRC Academy's NEO lessons use this library to demonstrate modern brushless motor configuration, follower setups, and safe parameter management through the Phoenix-style configuration object pattern.
+
+## com.revrobotics.spark.*
+
+### SparkMax
+
+**Full class:** `com.revrobotics.spark.SparkMax`
+
+The primary hardware control channel targeting modern brushless NEO motors via CAN. Each physical SPARK MAX on the robot's CAN bus is represented by one `SparkMax` instance, identified by its device ID.
+
+**Constructor**
+
+```java
+new SparkMax(int deviceID, MotorType type)
+```
+
+| Parameter  | Type        | Description                                                          |
+|------------|-------------|----------------------------------------------------------------------|
+| `deviceID` | `int`       | CAN ID of the SPARK MAX (e.g. `1`)                                   |
+| `type`     | `MotorType` | `MotorType.kBrushless` for NEO motors, `MotorType.kBrushed` for brushed motors |
+
+**Key Methods**
+
+| Method | Returns | Description |
+|--------|---------|-------------|
+| `set(double speed)` | `void` | Sets motor output in the range -1.0 (full reverse) to 1.0 (full forward) |
+| `get()` | `double` | Returns the last commanded speed |
+| `stopMotor()` | `void` | Immediately stops motor output |
+| `configure(SparkMaxConfig config, ResetMode resetMode, PersistMode persistMode)` | `void` | Applies a configuration object to the controller |
+| `getDeviceID()` | `int` | Returns the CAN ID of this SPARK MAX |
+
+**Example**
+
+```java
+import com.revrobotics.spark.SparkMax;
+import com.revrobotics.spark.SparkLowLevel.MotorType;
+
+private final SparkMax m_motor = new SparkMax(1, MotorType.kBrushless);
+m_motor.set(0.5); // 50% forward
+```
+
+---
+
+### SparkMaxConfig
+
+**Full class:** `com.revrobotics.spark.config.SparkMaxConfig`
+
+A configuration object that holds hardware parameters — such as motor inversion and follower behavior — before they are applied to a SPARK MAX via `configure()`. Configuration objects are built up in code and then pushed to the controller in a single call, which is safer than setting parameters one at a time.
+
+**Key Methods**
+
+| Method | Returns | Description |
+|--------|---------|-------------|
+| `inverted(boolean inverted)` | `SparkMaxConfig` | Sets whether the motor output should be inverted |
+| `follow(SparkMax leader)` | `SparkMaxConfig` | Configures this motor to mirror a leader motor |
+| `follow(SparkMax leader, boolean invert)` | `SparkMaxConfig` | Follower with optional direction inversion relative to the leader |
+
+**Example**
+
+```java
+SparkMaxConfig rightConfig = new SparkMaxConfig();
+rightConfig.inverted(true);
+m_rightMotor.configure(
+    rightConfig,
+    ResetMode.kResetSafeParameters,
+    PersistMode.kPersistParameters
+);
+```
+
+---
+
+### SparkLowLevel.MotorType
+
+**Full enum:** `com.revrobotics.spark.SparkLowLevel.MotorType`
+
+An enumeration passed to the `SparkMax` constructor to declare the type of motor attached to the controller.
+
+| Value | Use Case |
+|-------|----------|
+| `MotorType.kBrushless` | NEO brushless motors (most common in FRC Academy lessons) |
+| `MotorType.kBrushed` | Brushed DC motors (CIM, Mini CIM, etc.) |
+
+---
+
+### SparkBase (abstract)
+
+**Full class:** `com.revrobotics.spark.SparkBase`
+
+The root abstract implementation layer that `SparkMax` extends. You will not instantiate this class directly, but it defines two important enums used in every `configure()` call.
+
+**ResetMode**
+
+| Value | Description |
+|-------|-------------|
+| `ResetMode.kResetSafeParameters` | Resets the controller to safe default values before applying the new configuration |
+| `ResetMode.kNoResetSafeParameters` | Applies configuration on top of existing parameters without resetting |
+
+**PersistMode**
+
+| Value | Description |
+|-------|-------------|
+| `PersistMode.kPersistParameters` | Saves the configuration to the controller's flash memory (survives power cycle) |
+| `PersistMode.kNoPersistParameters` | Applies configuration in RAM only; reverts on reboot |
+
+---
+
+## Follower Configuration Example
+
+Use `SparkMaxConfig.follow()` to set up a secondary motor that mirrors a leader — essential for multi-motor gearboxes where two motors drive the same shaft.
+
+```java
+SparkMaxConfig followerConfig = new SparkMaxConfig();
+followerConfig.follow(m_leftMotor); // mirror leader exactly
+
+m_leftFollower.configure(
+    followerConfig,
+    ResetMode.kResetSafeParameters,
+    PersistMode.kPersistParameters
+);
+```
+
+For a right-side follower that needs to spin opposite to its leader (due to physical mounting orientation), pass `true` to invert:
+
+```java
+SparkMaxConfig rightFollowerConfig = new SparkMaxConfig();
+rightFollowerConfig.follow(m_rightMotor, true); // mirror leader in reverse
+
+m_rightFollower.configure(
+    rightFollowerConfig,
+    ResetMode.kResetSafeParameters,
+    PersistMode.kPersistParameters
+);
+```
+
+<Note>
+  The REV Robotics vendor library must be installed in your WPILib project via the vendor depot or by adding the JSON dependency URL. Use **REV Hardware Client** to update SPARK MAX firmware before use in competition.
+</Note>
+
+---
+
+## Related Pages
+
+<CardGroup cols={2}>
+  <Card title="CTRE Phoenix 6" icon="bolt" href="/api/ctre-phoenix6">
+    TalonFX, DutyCycleOut, and Follower for Kraken x60 and Falcon 500 motors.
+  </Card>
+  <Card title="NEO Motor Guide" icon="circle-info" href="/motors/neo-rev">
+    Wiring, CAN configuration, and FRC Academy lesson walkthrough for NEO motors.
+  </Card>
+</CardGroup>

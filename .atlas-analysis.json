@@ -1,0 +1,104 @@
+{
+  "projectType": "saas",
+  "projectName": "FRC Academy",
+  "projectDescription": "A student-made, interactive web and desktop training tool for learning FRC robot motor control and controller mapping using REV (NEO), CTRE (Kraken), and CIM (PWMSparkMax) hardware.",
+  "theme": "luma",
+  "primaryColor": "#3b82f6",
+  "lightColor": "#60a5fa",
+  "darkColor": "#1d4ed8",
+  "navigation": {
+    "tabs": [
+      {
+        "tab": "Documentation",
+        "groups": [
+          {
+            "group": "Get Started",
+            "pages": [
+              "introduction",
+              "quickstart",
+              "installation"
+            ]
+          },
+          {
+            "group": "Learning Paths",
+            "pages": [
+              "learning-paths/controllers",
+              "learning-paths/motors-overview",
+              "learning-paths/lesson-modes"
+            ]
+          },
+          {
+            "group": "Motor Types",
+            "pages": [
+              "motors/neo-rev",
+              "motors/kraken-ctre",
+              "motors/cim-pwmsparkmax"
+            ]
+          },
+          {
+            "group": "Lessons",
+            "pages": [
+              "lessons/define-motor",
+              "lessons/activate-motor",
+              "lessons/tank-drive-2motor",
+              "lessons/tank-drive-4motor"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "API Reference",
+        "groups": [
+          {
+            "group": "WPILib Core",
+            "pages": [
+              "api/wpilib-core",
+              "api/wpilib-commands"
+            ]
+          },
+          {
+            "group": "Vendor Libraries",
+            "pages": [
+              "api/rev-robotics",
+              "api/ctre-phoenix6"
+            ]
+          },
+          {
+            "group": "Utilities",
+            "pages": [
+              "api/math-networktables"
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "keyFeatures": [
+    "Interactive code editor with real-time syntax feedback",
+    "Guided and unguided lesson modes for step-by-step or self-directed learning",
+    "Support for three motor types: NEO (REV), Kraken (CTRE), and CIM (PWMSparkMax)",
+    "Built-in code review with line-by-line diagnostics (correct vs. incorrect lines highlighted)",
+    "Solution reveal system for learners who get stuck",
+    "Lessons covering motor definition, single-motor activation, 2-motor arcade tank drive, and 4-motor arcade tank drive",
+    "Controllers lesson for mapping CommandXboxController (driver and operator ports)",
+    "Integrated API reference browser with tabs for WPILib, REV, CTRE, and utility classes",
+    "Available as both a web app and a desktop Windows executable",
+    "No-install web version hosted on GitHub Pages"
+  ],
+  "publicApiSurface": [
+    "CommandXboxController (edu.wpi.first.wpilibj2.command)",
+    "SparkMax (com.revrobotics.spark)",
+    "SparkMaxConfig (com.revrobotics.spark)",
+    "SparkLowLevel.MotorType (com.revrobotics.spark)",
+    "TalonFX (com.ctre.phoenix6.hardware)",
+    "DutyCycleOut (com.ctre.phoenix6.controls)",
+    "Follower (com.ctre.phoenix6.controls)",
+    "PWMSparkMax (edu.wpi.first.wpilibj.motorcontrol)",
+    "TimedRobot (edu.wpi.first.wpilibj)",
+    "RunCommand (edu.wpi.first.wpilibj2.command)",
+    "InstantCommand (edu.wpi.first.wpilibj2.command)",
+    "MathUtil (edu.wpi.first.math)",
+    "PIDController (edu.wpi.first.math.controller)",
+    "NetworkTable (edu.wpi.first.networktables)"
+  ]
+}

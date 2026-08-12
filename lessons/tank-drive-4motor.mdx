@@ -1,0 +1,146 @@
+---
+title: "Lesson 4: 4-Motor Arcade Tank Drive"
+sidebarTitle: "4-Motor Tank Drive"
+description: "Extend 2-motor arcade tank drive to a 4-motor setup by adding follower motors for each side of the drivetrain. Covers SparkMax follower configuration and TalonFX Follower control."
+---
+
+Most FRC drivetrains use four or more motors — two per side — to generate the torque needed to push heavy robots across the field. This lesson extends the 2-motor arcade drive from Lesson 3 by adding a follower motor to each side. Follower motors mirror their leader's output automatically, so your drive loop stays exactly the same while doubling the power on each side of the drivetrain.
+
+## What You'll Learn
+
+- The follower motor concept: why it exists and how it reduces code complexity
+- How to configure a `SparkMax` as a follower using `SparkMaxConfig.follow()`
+- How to configure a `TalonFX` as a follower using the `Follower` control request
+- How to assign unique CAN IDs to four motors (IDs 1–4)
+- How to extend the 2-motor solution without rewriting the drive loop
+
+## Follower Motors Explained
+
+A **follower motor** is a motor controller that is configured to automatically mirror the output of a designated **leader motor**. Instead of calling `.set()` on every motor individually in your drive loop, you configure the follower once during initialization and then only command the leader. The follower watches the leader's output over the CAN bus and applies the same duty cycle in real time.
+
+<Note>
+  Only the **primary (leader) motors** need explicit `set()` calls in your drive loop. Follower motors update their output automatically whenever the leader's setpoint changes — you do not need to touch them in `teleopPeriodic()` or inside a `RunCommand`.
+</Note>
+
+Benefits of using follower motors:
+- Simpler drive loop — half as many `set()` calls
+- Followers stay in sync with leaders even if your code has timing irregularities
+- Less risk of accidentally commanding one motor without the other
+
+## 4-Motor Solution (NEO Example)
+
+Four SPARK MAX controllers share two CAN IDs per side. The left follower is configured to follow `m_leftMotor`, and the right follower follows `m_rightMotor`. Right-side inversion is applied to the right leader; the right follower inherits that direction automatically.
+
+```java
+import com.revrobotics.spark.SparkMax;
+import com.revrobotics.spark.SparkLowLevel.MotorType;
+import com.revrobotics.spark.config.SparkMaxConfig;
+import com.revrobotics.spark.SparkBase.ResetMode;
+import com.revrobotics.spark.SparkBase.PersistMode;
+import edu.wpi.first.wpilibj2.command.CommandXboxController;
+import edu.wpi.first.wpilibj2.command.RunCommand;
+
+public class RobotContainer {
+    private final SparkMax m_leftMotor = new SparkMax(1, MotorType.kBrushless);
+    private final SparkMax m_leftFollower = new SparkMax(2, MotorType.kBrushless);
+    private final SparkMax m_rightMotor = new SparkMax(3, MotorType.kBrushless);
+    private final SparkMax m_rightFollower = new SparkMax(4, MotorType.kBrushless);
+    private final CommandXboxController driverController = new CommandXboxController(0);
+
+    public RobotContainer() {
+        SparkMaxConfig rightConfig = new SparkMaxConfig();
+        rightConfig.inverted(true);
+        m_rightMotor.configure(rightConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
+
+        SparkMaxConfig leftFollowerConfig = new SparkMaxConfig();
+        leftFollowerConfig.follow(m_leftMotor);
+        m_leftFollower.configure(leftFollowerConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
+
+        SparkMaxConfig rightFollowerConfig = new SparkMaxConfig();
+        rightFollowerConfig.follow(m_rightMotor);
+        m_rightFollower.configure(rightFollowerConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
+
+        new RunCommand(() -> {
+            double speed = -driverController.getLeftY();
+            double turn = driverController.getRightX();
+            m_leftMotor.set(speed + turn);
+            m_rightMotor.set(speed - turn);
+        });
+    }
+}
+```
+
+Notice the drive `RunCommand` is **identical** to the 2-motor version — only the constructor setup changes.
+
+## Kraken 4-Motor Setup
+
+For TalonFX (Kraken) controllers, Phoenix 6 provides a `Follower` control request. You set it once during initialization and the follower continuously mirrors the leader.
+
+```java
+// Add these to your 2-motor setup:
+private final TalonFX m_leftFollower = new TalonFX(3, "DINO");
+private final TalonFX m_rightFollower = new TalonFX(4, "DINO");
+
+// In constructor:
+m_leftFollower.setControl(new Follower(m_leftMotor.getDeviceID(), false));
+m_rightFollower.setControl(new Follower(m_rightMotor.getDeviceID(), false));
+```
+
+`new Follower(leaderID, opposeLeader)` takes two arguments:
+- **`leaderID`** — the CAN device ID of the motor to follow, retrieved via `getDeviceID()`
+- **`opposeLeader`** — set to `true` to invert the follower relative to the leader (useful if the follower is physically mounted in the opposite orientation). Use `false` for standard same-direction following.
+
+<Note>
+  For the right-side TalonFX, right-side inversion is applied to the **leader** via `MotorOutputConfigs` (as in Lesson 3). The right follower uses `opposeLeader = false` because the leader already handles the inversion.
+</Note>
+
+## CAN ID Assignment
+
+Every motor controller on the CAN bus must have a **unique integer ID**. In a 4-motor drivetrain, you need four distinct IDs. FRC Academy uses the following default assignment:
+
+| Motor | CAN ID |
+|-------|--------|
+| Left Leader | 1 |
+| Left Follower | 2 |
+| Right Leader | 3 |
+| Right Follower | 4 |
+
+<Warning>
+  Duplicate CAN IDs will cause one or both controllers to behave erratically or not respond at all. Always verify your CAN IDs are unique using REV Hardware Client (for SPARK MAX) or CTRE Phoenix Tuner X (for TalonFX) before running the robot.
+</Warning>
+
+On a real robot, you set CAN IDs using your vendor's hardware configuration tool while connected to the controller via USB or the robot's CAN bus.
+
+## In FRC Academy
+
+To reach this lesson in the app:
+
+<Steps>
+  <Step title="Open the Main Menu">
+    Launch FRC Academy and click **Motors** from the main menu.
+  </Step>
+  <Step title="Select a motor type">
+    Choose **NEO**, **Kraken**, or **CIM**.
+  </Step>
+  <Step title="Open Lesson 4">
+    Select **4. 4 Motor Tank Drive (Arcade)** from the lesson list.
+  </Step>
+  <Step title="Choose a mode">
+    Pick **Guided Mode** or **Unguided Mode** and build on your Lesson 3 solution.
+  </Step>
+</Steps>
+
+<Note>
+  Only the primary (leader) motors need explicit `set()` calls in the drive loop. Followers update automatically — adding `.set()` calls on follower motors is redundant and may cause unexpected behavior.
+</Note>
+
+---
+
+<CardGroup cols={2}>
+  <Card title="← 2-Motor Tank Drive" icon="car" href="/lessons/tank-drive-2motor">
+    Lesson 3 — The 2-motor arcade drive foundation this lesson builds upon.
+  </Card>
+  <Card title="Motor Types Overview" icon="list" href="/learning-paths/motors-overview">
+    Compare NEO, Kraken, and CIM motor controllers — hardware specs, vendor libraries, and when to use each.
+  </Card>
+</CardGroup>

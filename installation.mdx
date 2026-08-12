@@ -1,0 +1,88 @@
+---
+title: "Install FRC Academy: Web or Desktop App"
+sidebarTitle: "Installation"
+description: "Run FRC Academy in your browser with no setup, or download the Windows desktop app. Java 21 is required for the desktop version v2.0.0 and above."
+---
+
+FRC Academy is available in two forms: an instant web app that runs in any modern browser with zero configuration, and a downloadable Windows `.exe` for teams who prefer an offline or desktop experience. Most users should start with the web version — it is always up to date and requires no Java installation.
+
+## Web App (Recommended)
+
+The web version of FRC Academy requires no installation, no Java, and no account. Open your browser and start learning immediately.
+
+<Steps>
+  <Step title="Open FRC Academy in your browser">
+    Navigate to [https://holden9607.github.io/FRC-Academy/](https://holden9607.github.io/FRC-Academy/) in any modern browser — Chrome, Firefox, Edge, and Safari are all supported.
+  </Step>
+  <Step title="Start a learning path">
+    Click **Motors** or **Controllers** from the main menu to begin your first lesson. No sign-in, no download, no configuration required.
+  </Step>
+</Steps>
+
+<Note>
+  The web version is always up to date with the latest lessons and bug fixes. It does not require Java to be installed on your machine. This is the recommended way to use FRC Academy for most students and mentors.
+</Note>
+
+## Desktop App
+
+The desktop app is a downloadable Windows `.exe` that runs FRC Academy locally on your machine. This is useful for environments with restricted internet access or for students who prefer a native window experience.
+
+<Steps>
+  <Step title="Go to the GitHub Releases page">
+    Open [https://github.com/Holden9607/FRC-Academy/releases/latest](https://github.com/Holden9607/FRC-Academy/releases/latest) in your browser. This always links to the most recent stable release.
+  </Step>
+  <Step title="Download the latest .zip release">
+    Under the **Assets** section of the release, click the `.zip` file to download it to your computer.
+  </Step>
+  <Step title="Extract the archive">
+    Right-click the downloaded `.zip` file and select **"Extract All"**. Choose a destination folder (your Desktop or Documents folder works well) and click **Extract**.
+  </Step>
+  <Step title="Launch the app">
+    Open the extracted folder and double-click **`FRC-Academy.exe`** to start the application. The main menu will appear and you can begin a lesson immediately.
+  </Step>
+</Steps>
+
+<Warning>
+  Most antivirus software will scan the `.exe` file when you first open it. This is expected behavior for unsigned executables — the file is completely safe. If your antivirus blocks it, you can add an exclusion for the file or simply use the web version at [https://holden9607.github.io/FRC-Academy/](https://holden9607.github.io/FRC-Academy/) instead.
+</Warning>
+
+## Java Requirements
+
+Because FRC Academy compiles and runs real robot code logic locally, **the desktop app requires Java to be installed on your machine**. The required Java version depends on which release you are running:
+
+| FRC Academy Version | Required Java Version |
+|---|---|
+| v1.1.0 or lower | Java 8 or higher |
+| v2.0.0 or higher | Java 21 or higher |
+
+<Warning>
+  If the correct version of Java is not installed, the application will not open. Download Java from [https://www.java.com/en/download/](https://www.java.com/en/download/) if you are missing it. For Java 21, you can also download it directly from [Adoptium](https://adoptium.net/) or [Oracle](https://www.oracle.com/java/technologies/downloads/).
+</Warning>
+
+## Troubleshooting
+
+<Accordion title="The app won't open">
+  The most common cause is a missing or outdated Java installation. Check which version of Java you have by opening a terminal or Command Prompt and running:
+
+  ```bash
+  java -version
+  ```
+
+  Compare the output to the version requirements in the table above. If you need to install or upgrade Java, download it from [https://www.java.com/en/download/](https://www.java.com/en/download/) (for Java 8) or [https://adoptium.net/](https://adoptium.net/) (for Java 21). After installing, restart your computer and try launching the app again.
+</Accordion>
+
+<Accordion title="Antivirus is blocking the .exe">
+  FRC Academy is a student-made open-source project and the `.exe` is completely safe. Antivirus tools sometimes flag unsigned executables from independent developers. To resolve this:
+
+  1. Check your antivirus quarantine and restore the file if it was removed
+  2. Add an exclusion for the `FRC-Academy.exe` file in your antivirus settings
+  3. Alternatively, switch to the web version at [https://holden9607.github.io/FRC-Academy/](https://holden9607.github.io/FRC-Academy/) — it runs entirely in your browser and requires no executable download
+</Accordion>
+
+<Accordion title="The app feels outdated or is missing lessons">
+  The desktop app may lag behind the web version while updates are being packaged into a new release. If you notice missing lessons, UI differences, or bugs that seem fixed online, use the web version instead:
+
+  [https://holden9607.github.io/FRC-Academy/](https://holden9607.github.io/FRC-Academy/)
+
+  The web version is always in sync with the latest codebase and requires no reinstallation to get updates.
+</Accordion>

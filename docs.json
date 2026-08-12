@@ -1,72 +1,88 @@
 {
   "$schema": "https://mintlify.com/docs.json",
-  "theme": "mint",
-  "name": "Mintlify Starter Kit",
+  "name": "FRC Academy",
+  "theme": "luma",
   "colors": {
-    "primary": "#16A34A",
-    "light": "#07C983",
-    "dark": "#15803D"
-  },
-  "favicon": "/favicon.svg",
-  "navigation": {
-    "pages": [
-      {
-        "group": "Getting Started",
-        "pages": [
-          "index",
-          "quickstart"
-        ]
-      }
-    ],
-    "global": {
-      "anchors": [
-        {
-          "anchor": "Documentation",
-          "href": "https://mintlify.com/docs",
-          "icon": "book-open-cover"
-        },
-        {
-          "anchor": "Blog",
-          "href": "https://mintlify.com/blog",
-          "icon": "newspaper"
-        }
-      ]
-    }
-  },
-  "logo": {
-    "light": "/logo/light.svg",
-    "dark": "/logo/dark.svg"
+    "primary": "#3b82f6",
+    "light": "#60a5fa",
+    "dark": "#1d4ed8"
   },
   "navbar": {
-    "links": [
-      {
-        "label": "Support",
-        "href": "mailto:hi@mintlify.com"
-      }
-    ],
     "primary": {
-      "type": "button",
-      "label": "Dashboard",
-      "href": "https://app.mintlify.com"
+      "type": "github",
+      "href": "https://github.com/Holden9607/FRC-Academy"
     }
-  },
-  "contextual": {
-    "options": [
-      "copy",
-      "view",
-      "chatgpt",
-      "claude",
-      "perplexity",
-      "mcp",
-      "cursor",
-      "vscode"
-    ]
   },
   "footer": {
     "socials": {
-      "x": "https://x.com/mintlify",
-      "github": "https://github.com/mintlify",
-      "linkedin": "https://linkedin.com/company/mintlify"
+      "github": "https://github.com/Holden9607/FRC-Academy"
     }
+  },
+  "navigation": {
+    "tabs": [
+      {
+        "tab": "Documentation",
+        "groups": [
+          {
+            "group": "Get Started",
+            "pages": [
+              "introduction",
+              "quickstart",
+              "installation"
+            ]
+          },
+          {
+            "group": "Learning Paths",
+            "pages": [
+              "learning-paths/controllers",
+              "learning-paths/motors-overview",
+              "learning-paths/lesson-modes"
+            ]
+          },
+          {
+            "group": "Motor Types",
+            "pages": [
+              "motors/neo-rev",
+              "motors/kraken-ctre",
+              "motors/cim-pwmsparkmax"
+            ]
+          },
+          {
+            "group": "Lessons",
+            "pages": [
+              "lessons/define-motor",
+              "lessons/activate-motor",
+              "lessons/tank-drive-2motor",
+              "lessons/tank-drive-4motor"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "API Reference",
+        "groups": [
+          {
+            "group": "WPILib Core",
+            "pages": [
+              "api/wpilib-core",
+              "api/wpilib-commands"
+            ]
+          },
+          {
+            "group": "Vendor Libraries",
+            "pages": [
+              "api/rev-robotics",
+              "api/ctre-phoenix6"
+            ]
+          },
+          {
+            "group": "Utilities",
+            "pages": [
+              "api/math-networktables"
+            ]
+          }
+        ]
+      }
+    ]
   }
 }
