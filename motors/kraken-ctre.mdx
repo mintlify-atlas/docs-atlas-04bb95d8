@@ -1,7 +1,7 @@
 ---
-title: "Kraken Motor (CTRE Phoenix 6) Setup and Programming"
+title: "Kraken x60 Motor (CTRE Phoenix 6) Setup and Programming"
 sidebarTitle: "Kraken (CTRE)"
-description: "Learn to define and control a CTRE Kraken or Falcon 500 motor using TalonFX and the Phoenix 6 vendor library. Covers CAN ID, bus name, and DutyCycleOut control."
+description: "Learn to define and control a CTRE Kraken x60 or Falcon 500 using TalonFX and Phoenix 6. Covers CAN ID, bus name, and DutyCycleOut control."
 ---
 
 The **CTRE Kraken x60** (and its predecessor, the **Falcon 500**) are high-performance brushless motors built directly into their own motor controller — the **TalonFX**. These motors are programmed using the **CTRE Phoenix 6** vendor library, which provides a rich API for control modes, configuration, telemetry, and multi-motor synchronization. In FRC Academy lessons, these motors are controlled using the `DutyCycleOut` control request, which maps directly to a -1.0 to 1.0 speed range.
@@ -59,21 +59,39 @@ m_motor.setControl(new DutyCycleOut(0.0));  // stop
 
 The `DutyCycleOut` value ranges from **-1.0** (full reverse) to **1.0** (full forward). For performance-sensitive code, consider caching the `DutyCycleOut` object as a field and updating its `Output` property instead of creating a new object every loop.
 
-## Follower Motors (for Tank Drive)
+## Inverting a Motor (for Tank Drive)
 
-In a tank drivetrain, each side of the robot typically has two motors driving the same gearbox. Instead of commanding each motor individually, you can configure one motor as a **follower** that mirrors the output of a **lead** motor. In Phoenix 6, this is done with the `Follower` control request.
-
-For a **2-motor drive** setup, the right motor must also be **inverted** relative to the left, because the motors face opposite directions. Pass `true` as the `opposeLeader` argument to the `Follower` constructor:
+In a two-motor drivetrain, the left and right motors face opposite directions. Without inversion, both motors spin the same way and the robot spins in place. For the **TalonFX**, inversion is applied through a `MotorOutputConfigs` configuration object. You will need two additional imports:
 
 ```java
-private final TalonFX m_leftMotor = new TalonFX(1, "DINO");
-private final TalonFX m_rightMotor = new TalonFX(2, "DINO");
-
-// In robotInit():
-m_rightMotor.setControl(new Follower(m_leftMotor.getDeviceID(), true)); // opposed
+import com.ctre.phoenix6.configs.MotorOutputConfigs;
+import com.ctre.phoenix6.signals.InvertedValue;
 ```
 
-For a **4-motor drive** setup (two motors per side), configure follower motors independently:
+Then, inside `robotInit()`, apply inversion to the right motor:
+
+```java
+var rightConfig = new MotorOutputConfigs();
+rightConfig.Inverted = InvertedValue.Clockwise_Positive;
+m_rightMotor.getConfigurator().apply(rightConfig);
+```
+
+After inversion is configured, command both motors separately in `teleopPeriodic()` using `DutyCycleOut` — there is no follower relationship in a 2-motor drivetrain:
+
+```java
+m_leftMotor.setControl(new DutyCycleOut(leftSpeed));
+m_rightMotor.setControl(new DutyCycleOut(rightSpeed));
+```
+
+## Follower Motors (for 4-Motor Tank Drive)
+
+In a 4-motor drivetrain, each side of the robot has two motors driving the same gearbox. Instead of commanding each motor individually, you configure one motor as a **follower** that mirrors the output of a **lead** motor. In Phoenix 6, this is done with the `Follower` control request. Add this import:
+
+```java
+import com.ctre.phoenix6.controls.Follower;
+```
+
+For a **4-motor drive** setup (two motors per side), configure follower motors to track their lead motors:
 
 ```java
 // In robotInit():
@@ -84,9 +102,6 @@ m_rightFollow.setControl(new Follower(m_rightLead.getDeviceID(), false));
 Then invert the entire right side using `MotorOutputConfigs`:
 
 ```java
-import com.ctre.phoenix6.configs.MotorOutputConfigs;
-import com.ctre.phoenix6.signals.InvertedValue;
-
 var rightConfig = new MotorOutputConfigs();
 rightConfig.Inverted = InvertedValue.Clockwise_Positive;
 m_rightLead.getConfigurator().apply(rightConfig);

@@ -4,7 +4,7 @@ sidebarTitle: "Activate a Motor"
 description: "Bind an Xbox controller button B to run a single motor at 50% speed using CommandXboxController, whileTrue(), onFalse(), and RunCommand in FRC Java."
 ---
 
-Building on the motor definition from Lesson 1, this lesson wires your motor to an Xbox controller button so it runs while the button is held and automatically stops the moment it is released. This pattern is foundational in FRC Command-Based programming — almost every operator-controlled mechanism on a robot uses the same `whileTrue` / `onFalse` binding structure.
+Building on the motor definition from Lesson 1, this lesson wires your motor to an Xbox controller button so it runs while the button is held and automatically stops the moment it is released. This pattern is foundational in FRC robot programming — almost every operator-controlled mechanism uses the same `whileTrue` / `onFalse` binding structure.
 
 ## What You'll Learn
 
@@ -14,26 +14,91 @@ Building on the motor definition from Lesson 1, this lesson wires your motor to 
 - How to write an inline `RunCommand` lambda to set motor speed on the fly
 - The motor speed range: `-1.0` (full reverse) → `0.0` (stopped) → `1.0` (full forward)
 
-## Solution (NEO Example)
+## Solutions by Motor Type
 
 <Tabs>
   <Tab title="NEO (SparkMax)">
-    The full solution adds a `CommandXboxController` field and wires button B inside the `RobotContainer` constructor. The motor runs at 50% forward while B is held and stops when B is released.
+    The motor runs at 50% forward while B is held and stops when B is released. Button binding lives inside `robotInit()`.
 
     ```java
-    import com.revrobotics.spark.SparkMax;
-    import com.revrobotics.spark.SparkLowLevel.MotorType;
+    import edu.wpi.first.wpilibj.TimedRobot;
     import edu.wpi.first.wpilibj2.command.CommandXboxController;
     import edu.wpi.first.wpilibj2.command.RunCommand;
+    import edu.wpi.first.wpilibj2.command.InstantCommand;
+    import com.revrobotics.spark.SparkMax;
+    import com.revrobotics.spark.SparkLowLevel.MotorType;
 
-    public class RobotContainer {
+    public class Robot extends TimedRobot {
         private final SparkMax m_motor = new SparkMax(1, MotorType.kBrushless);
+        private final CommandXboxController driverController = new CommandXboxController(0);
         private final CommandXboxController operatorController = new CommandXboxController(1);
 
-        public RobotContainer() {
+        @Override
+        public void robotInit() {
             operatorController.b()
-                .whileTrue(new RunCommand(() -> m_motor.set(0.5)))
-                .onFalse(new RunCommand(() -> m_motor.set(0.0)));
+                .whileTrue(new RunCommand(() -> {
+                    m_motor.set(0.5);
+                }))
+                .onFalse(new InstantCommand(() -> {
+                    m_motor.set(0.0);
+                }));
+        }
+    }
+    ```
+  </Tab>
+  <Tab title="Kraken (TalonFX)">
+    The Kraken uses `DutyCycleOut` control requests instead of `.set()`. The binding structure is identical — only the motor API differs.
+
+    ```java
+    import edu.wpi.first.wpilibj.TimedRobot;
+    import edu.wpi.first.wpilibj2.command.CommandXboxController;
+    import edu.wpi.first.wpilibj2.command.RunCommand;
+    import edu.wpi.first.wpilibj2.command.InstantCommand;
+    import com.ctre.phoenix6.hardware.TalonFX;
+    import com.ctre.phoenix6.controls.DutyCycleOut;
+
+    public class Robot extends TimedRobot {
+        private final TalonFX m_motor = new TalonFX(1, "DINO");
+        private final CommandXboxController driverController = new CommandXboxController(0);
+        private final CommandXboxController operatorController = new CommandXboxController(1);
+
+        @Override
+        public void robotInit() {
+            operatorController.b()
+                .whileTrue(new RunCommand(() -> {
+                    m_motor.setControl(new DutyCycleOut(0.5));
+                }))
+                .onFalse(new InstantCommand(() -> {
+                    m_motor.setControl(new DutyCycleOut(0.0));
+                }));
+        }
+    }
+    ```
+  </Tab>
+  <Tab title="CIM (PWMSparkMax)">
+    CIM motors use the same `.set()` API as NEO. The only difference is the class name and import.
+
+    ```java
+    import edu.wpi.first.wpilibj.TimedRobot;
+    import edu.wpi.first.wpilibj2.command.CommandXboxController;
+    import edu.wpi.first.wpilibj2.command.RunCommand;
+    import edu.wpi.first.wpilibj2.command.InstantCommand;
+    import edu.wpi.first.wpilibj.motorcontrol.PWMSparkMax;
+
+    public class Robot extends TimedRobot {
+        private final PWMSparkMax m_motor = new PWMSparkMax(0);
+        private final CommandXboxController driverController = new CommandXboxController(0);
+        private final CommandXboxController operatorController = new CommandXboxController(1);
+
+        @Override
+        public void robotInit() {
+            operatorController.b()
+                .whileTrue(new RunCommand(() -> {
+                    m_motor.set(0.5);
+                }))
+                .onFalse(new InstantCommand(() -> {
+                    m_motor.set(0.0);
+                }));
         }
     }
     ```
@@ -49,10 +114,13 @@ Calling `.b()` on a `CommandXboxController` returns a `Trigger` object that is a
 Schedules the given command every scheduler cycle while the trigger condition is true (i.e., while the button stays held). When the button is released the command is interrupted.
 
 **`.onFalse(command)`**
-Schedules the given command on the falling edge — the instant the trigger transitions from true to false (button released). This is how you ensure the motor is explicitly commanded to stop rather than just holding its last setpoint.
+Schedules the given command on the falling edge — the instant the trigger transitions from true to false (button released). Using `InstantCommand` here ensures the motor is commanded to stop exactly once rather than continuously.
 
-**`new RunCommand(() -> m_motor.set(0.5))`**
-`RunCommand` is a lightweight WPILib command that runs a single lambda (anonymous function) repeatedly while active. The lambda `() -> m_motor.set(0.5)` sets the motor output to 50% forward every scheduler tick.
+**`new RunCommand(() -> { m_motor.set(0.5); })`**
+`RunCommand` is a lightweight WPILib command that runs a single lambda (anonymous function) repeatedly while active. The lambda sets the motor output to 50% forward every scheduler tick.
+
+**`new InstantCommand(() -> { m_motor.set(0.0); })`**
+`InstantCommand` runs its lambda exactly once and immediately finishes. It is the right choice for `.onFalse()` because stopping a motor is a one-time action, not a continuous one.
 
 **Speed range**
 Motor `set()` accepts a `double` from `-1.0` to `1.0`:
@@ -64,19 +132,6 @@ Motor `set()` accepts a `double` from `-1.0` to `1.0`:
 | `0.0` | Stopped |
 | `-0.5` | 50% speed reverse |
 | `-1.0` | Full speed reverse |
-
-## CTRE Equivalent
-
-If you are using a Kraken (TalonFX) instead of a NEO, the motor API differs — you use a `DutyCycleOut` control request instead of `.set()`:
-
-```java
-// Kraken equivalent:
-operatorController.b()
-    .whileTrue(new RunCommand(() -> m_motor.setControl(new DutyCycleOut(0.5))))
-    .onFalse(new RunCommand(() -> m_motor.setControl(new DutyCycleOut(0.0))));
-```
-
-`DutyCycleOut` is a Phoenix 6 control request that commands a duty-cycle percentage, equivalent in behavior to REV's `.set()`. Remember to add `import com.ctre.phoenix6.controls.DutyCycleOut;` at the top of your file.
 
 ## In FRC Academy
 

@@ -1,10 +1,20 @@
 ---
-title: "Motors Overview: NEO, Kraken, and CIM in FRC"
+title: "FRC Academy Motors: NEO, Kraken, and CIM Motor Types"
 sidebarTitle: "Motors Overview"
-description: "Compare the three motor types supported in FRC Academy — REV NEO, CTRE Kraken, and CIM via PWMSparkMax — and learn which Java classes and imports each requires."
+description: "Compare NEO, Kraken, and CIM motors in FRC Academy — learn the Java classes, imports, and vendor libraries each motor type requires for robot code."
 ---
 
 FRC Academy teaches motor control through three real-world motor types used on FRC robots: the **REV NEO** (brushless, controlled via SPARK MAX over CAN), the **CTRE Kraken x60 / Falcon 500** (brushless, controlled via TalonFX over CAN), and the **CIM** (brushed, controlled via PWMSparkMax over PWM). Choosing the right motor type at the start of each lesson matters — each one requires a different vendor library, a different Java import, and a different constructor call. Picking the wrong type means your imports won't compile and your hardware won't respond.
+
+## Selecting a Motor Type
+
+When you open the Motors learning path in FRC Academy, the app presents three buttons to choose your hardware:
+
+- **NEO Motor (REV)** — brushless NEO motor controlled via REV SPARK MAX over CAN
+- **Kraken Motor (CTRE)** — brushless Kraken/Falcon motor controlled via TalonFX over CAN
+- **CIM Motor (PWMSparkMax)** — brushed CIM motor controlled via PWMSparkMax over PWM
+
+The exact button label you select determines which imports, constructor arguments, and vendor APIs appear in your guided steps, skeleton code, and reference solution.
 
 ## Motor Comparison
 

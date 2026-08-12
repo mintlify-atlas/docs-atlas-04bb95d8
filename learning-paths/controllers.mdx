@@ -1,7 +1,7 @@
 ---
-title: "Controllers Learning Path: Xbox Controller Mapping"
+title: "FRC Academy Controllers: Mapping Xbox Input in Code"
 sidebarTitle: "Controllers"
-description: "Learn to define driver and operator Xbox controllers in FRC robot code using CommandXboxController. Map ports, bind events, and control your robot with real Java code."
+description: "Learn how FRC Academy teaches CommandXboxController: import the class, declare driver on port 0 and operator on port 1, then bind button triggers in Java."
 ---
 
 The Controllers lesson in FRC Academy teaches you how to wire up Xbox controllers so your robot can respond to human input. You'll define two `CommandXboxController` objects — one for the driver (USB port 0) and one for the operator (USB port 1) — import the class from WPILib, and declare both as `private final` fields inside your robot class. By the end of this lesson, your robot code will be ready to accept event bindings like `.whileTrue()` and `.onFalse()` on any button.
@@ -52,7 +52,7 @@ The FRC Academy app walks you through four steps in the in-editor popup. Each st
 
 Here is the complete, verified solution that the FRC Academy Code Review modal checks against:
 
-```java RobotContainer.java
+```java
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj2.command.CommandXboxController;
 

@@ -25,11 +25,18 @@ Defining a motor is the first step in any FRC robot program. Before you can spin
     The REV SPARK MAX uses the `SparkMax` class from REVLib. You must specify `MotorType.kBrushless` to tell the controller it is driving a brushless NEO motor.
 
     ```java
+    import edu.wpi.first.wpilibj.TimedRobot;
+    import edu.wpi.first.wpilibj2.command.CommandXboxController;
     import com.revrobotics.spark.SparkMax;
     import com.revrobotics.spark.SparkLowLevel.MotorType;
 
-    public class RobotContainer {
+    public class Robot extends TimedRobot {
         private final SparkMax m_motor = new SparkMax(1, MotorType.kBrushless);
+        private final CommandXboxController driverController = new CommandXboxController(0);
+        private final CommandXboxController operatorController = new CommandXboxController(1);
+
+        @Override
+        public void robotInit() { }
     }
     ```
   </Tab>
@@ -37,10 +44,17 @@ Defining a motor is the first step in any FRC robot program. Before you can spin
     The CTRE Kraken uses the `TalonFX` class from Phoenix 6. The second constructor argument is the CANivore bus name — FRC Academy uses `"DINO"` as its default bus name.
 
     ```java
+    import edu.wpi.first.wpilibj.TimedRobot;
+    import edu.wpi.first.wpilibj2.command.CommandXboxController;
     import com.ctre.phoenix6.hardware.TalonFX;
 
-    public class RobotContainer {
+    public class Robot extends TimedRobot {
         private final TalonFX m_motor = new TalonFX(1, "DINO");
+        private final CommandXboxController driverController = new CommandXboxController(0);
+        private final CommandXboxController operatorController = new CommandXboxController(1);
+
+        @Override
+        public void robotInit() { }
     }
     ```
   </Tab>
@@ -48,10 +62,17 @@ Defining a motor is the first step in any FRC robot program. Before you can spin
     CIM motors driven over PWM use the `PWMSparkMax` class from WPILib. The only constructor argument is the PWM port number on the roboRIO, starting from `0`.
 
     ```java
+    import edu.wpi.first.wpilibj.TimedRobot;
+    import edu.wpi.first.wpilibj2.command.CommandXboxController;
     import edu.wpi.first.wpilibj.motorcontrol.PWMSparkMax;
 
-    public class RobotContainer {
+    public class Robot extends TimedRobot {
         private final PWMSparkMax m_motor = new PWMSparkMax(0);
+        private final CommandXboxController driverController = new CommandXboxController(0);
+        private final CommandXboxController operatorController = new CommandXboxController(1);
+
+        @Override
+        public void robotInit() { }
     }
     ```
   </Tab>
@@ -91,7 +112,7 @@ To reach this lesson in the app:
 </Steps>
 
 <Note>
-  In a real WPILib robot project, this field declaration lives in `RobotContainer.java` (Command-Based) or `Robot.java` (TimedRobot). The `private final` modifiers ensure the motor object is created once and shared across your robot code.
+  In FRC Academy, all robot code lives in a `Robot` class that extends `TimedRobot`. Motor fields are declared at the class level so they are accessible from both `robotInit()` and `teleopPeriodic()`. The `private final` modifiers ensure the motor object is created once and cannot be reassigned.
 </Note>
 
 ---

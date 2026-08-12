@@ -93,20 +93,14 @@ new Follower(int masterID, boolean opposeLeaderDirection)
 | `masterID`              | `int`     | The device ID of the leader TalonFX to mirror                                            |
 | `opposeLeaderDirection` | `boolean` | `true` if the follower should spin opposite to the leader (e.g. physically reversed motor) |
 
-**2-Motor Tank Drive Example**
+**4-Motor Tank Drive Example**
+
+In FRC Academy's 4-motor Kraken lesson, each follower mirrors its side's lead motor. Right-side inversion is handled separately via `MotorOutputConfigs`, so both followers use `false` for `opposeLeaderDirection`:
 
 ```java
-// Right motor is mechanically mirrored — it must spin opposite to the left motor
-m_rightMotor.setControl(new Follower(m_leftMotor.getDeviceID(), true));
-// m_rightMotor will always mirror m_leftMotor but in reverse
-```
-
-**4-Motor Setup Example**
-
-```java
-// Each follower mirrors its side's leader exactly
-m_leftFollower.setControl(new Follower(m_leftMotor.getDeviceID(), false));
-m_rightFollower.setControl(new Follower(m_rightMotor.getDeviceID(), false));
+// Each follower strictly mirrors its side's lead motor
+m_leftFollow.setControl(new Follower(m_leftLead.getDeviceID(), false));
+m_rightFollow.setControl(new Follower(m_rightLead.getDeviceID(), false));
 ```
 
 <Warning>

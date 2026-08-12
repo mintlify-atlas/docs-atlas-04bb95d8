@@ -1,5 +1,5 @@
 ---
-title: "Get Started with FRC Academy in 5 Minutes"
+title: "Get Started with FRC Academy: First Lesson in 5 Minutes"
 sidebarTitle: "Quickstart"
 description: "Complete your first FRC Academy lesson — define a NEO motor in Java — using the interactive code editor. No robot hardware required."
 ---
@@ -22,11 +22,11 @@ This quickstart walks you through completing your very first FRC Academy lesson:
   <Step title="Choose Guided Lesson">
     Click **Guided Lesson** from the lesson type menu. Guided mode provides a step-by-step floating popup that shows you exactly what code to type at each stage, making it ideal for your first time through a lesson.
   </Step>
+  <Step title="Click 'Start Coding'">
+    Click the **Start Coding** button at the bottom of the instructions panel. This loads a code skeleton into the editor and makes it editable. The skeleton includes the correct imports and class structure with `// TODO` comments showing where your code belongs. In Guided mode, clicking Start Coding also triggers the Guided Step popup to appear.
+  </Step>
   <Step title="Follow the guided steps">
     A floating **Guided Step** popup appears in the bottom-right corner of the editor panel. It shows the current step number (e.g., "1 / 4") alongside a written instruction and a code snippet to type. Read each step carefully, type the shown code into the editor, then click **Next Step** to advance. The steps for this lesson walk you through the import statements and the motor field declaration.
-  </Step>
-  <Step title="Click 'Start Coding'">
-    Click the **Start Coding** button at the bottom of the instructions panel. This loads a code skeleton into the editor and makes it editable. The skeleton includes the correct imports and class structure with `// TODO` comments showing where your code belongs. Type your motor declaration to fill in the missing parts.
   </Step>
   <Step title="Click 'Verify Code'">
     When you have filled in the code, click the **Verify Code** button. The Code Review modal opens with a line-by-line diagnostic view of your submission. Each line of your code is highlighted according to correctness — read the results and see how you did.
@@ -35,16 +35,23 @@ This quickstart walks you through completing your very first FRC Academy lesson:
 
 After successfully completing the lesson, your final code should look like this:
 
-```java RobotContainer.java
+```java Robot.java
+import edu.wpi.first.wpilibj.TimedRobot;
+import edu.wpi.first.wpilibj2.command.CommandXboxController;
 import com.revrobotics.spark.SparkMax;
 import com.revrobotics.spark.SparkLowLevel.MotorType;
 
-public class RobotContainer {
+public class Robot extends TimedRobot {
     private final SparkMax m_motor = new SparkMax(1, MotorType.kBrushless);
+    private final CommandXboxController driverController = new CommandXboxController(0);
+    private final CommandXboxController operatorController = new CommandXboxController(1);
+
+    @Override
+    public void robotInit() { }
 }
 ```
 
-The motor is declared as a `private final` field, instantiated inline with CAN ID `1` and `MotorType.kBrushless` — the correct type for a NEO brushless motor.
+The motor is declared as a `private final` field on `Robot extends TimedRobot`, instantiated inline with CAN ID `1` and `MotorType.kBrushless` — the correct type for a NEO brushless motor. The lesson skeleton also includes the two `CommandXboxController` declarations required by the solution.
 
 ## Understanding the Code Review
 

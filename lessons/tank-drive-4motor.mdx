@@ -11,15 +11,16 @@ Most FRC drivetrains use four or more motors — two per side — to generate th
 - The follower motor concept: why it exists and how it reduces code complexity
 - How to configure a `SparkMax` as a follower using `SparkMaxConfig.follow()`
 - How to configure a `TalonFX` as a follower using the `Follower` control request
+- How CIM motors use `addFollower()` from WPILib's `MotorController` interface
 - How to assign unique CAN IDs to four motors (IDs 1–4)
 - How to extend the 2-motor solution without rewriting the drive loop
 
 ## Follower Motors Explained
 
-A **follower motor** is a motor controller that is configured to automatically mirror the output of a designated **leader motor**. Instead of calling `.set()` on every motor individually in your drive loop, you configure the follower once during initialization and then only command the leader. The follower watches the leader's output over the CAN bus and applies the same duty cycle in real time.
+A **follower motor** is a motor controller that is configured to automatically mirror the output of a designated **leader motor**. Instead of calling `.set()` on every motor individually in your drive loop, you configure the follower once during initialization and then only command the leader. The follower watches the leader's output and applies the same duty cycle in real time.
 
 <Note>
-  Only the **primary (leader) motors** need explicit `set()` calls in your drive loop. Follower motors update their output automatically whenever the leader's setpoint changes — you do not need to touch them in `teleopPeriodic()` or inside a `RunCommand`.
+  Only the **leader motors** need explicit `set()` or `setControl()` calls in your drive loop. Follower motors update their output automatically whenever the leader's setpoint changes.
 </Note>
 
 Benefits of using follower motors:
@@ -27,76 +28,162 @@ Benefits of using follower motors:
 - Followers stay in sync with leaders even if your code has timing irregularities
 - Less risk of accidentally commanding one motor without the other
 
-## 4-Motor Solution (NEO Example)
+## Solutions by Motor Type
 
-Four SPARK MAX controllers share two CAN IDs per side. The left follower is configured to follow `m_leftMotor`, and the right follower follows `m_rightMotor`. Right-side inversion is applied to the right leader; the right follower inherits that direction automatically.
+<Tabs>
+  <Tab title="NEO (SparkMax)">
+    Four SPARK MAX controllers share two CAN IDs per side (IDs 1–4). The left follower is configured to follow `m_leftLead`, and the right follower follows `m_rightLead`. Right-side inversion is applied to the right leader only.
 
-```java
-import com.revrobotics.spark.SparkMax;
-import com.revrobotics.spark.SparkLowLevel.MotorType;
-import com.revrobotics.spark.config.SparkMaxConfig;
-import com.revrobotics.spark.SparkBase.ResetMode;
-import com.revrobotics.spark.SparkBase.PersistMode;
-import edu.wpi.first.wpilibj2.command.CommandXboxController;
-import edu.wpi.first.wpilibj2.command.RunCommand;
+    ```java
+    import edu.wpi.first.wpilibj.TimedRobot;
+    import edu.wpi.first.wpilibj.XboxController;
+    import edu.wpi.first.wpilibj.drive.DifferentialDrive;
+    import com.revrobotics.spark.SparkMax;
+    import com.revrobotics.spark.SparkLowLevel.MotorType;
+    import com.revrobotics.spark.config.SparkMaxConfig;
+    import com.revrobotics.spark.SparkBase.ResetMode;
+    import com.revrobotics.spark.SparkBase.PersistMode;
 
-public class RobotContainer {
-    private final SparkMax m_leftMotor = new SparkMax(1, MotorType.kBrushless);
-    private final SparkMax m_leftFollower = new SparkMax(2, MotorType.kBrushless);
-    private final SparkMax m_rightMotor = new SparkMax(3, MotorType.kBrushless);
-    private final SparkMax m_rightFollower = new SparkMax(4, MotorType.kBrushless);
-    private final CommandXboxController driverController = new CommandXboxController(0);
+    public class Robot extends TimedRobot {
+        private static final int kLeftLeadID = 1;
+        private static final int kLeftFollowID = 2;
+        private static final int kRightLeadID = 3;
+        private static final int kRightFollowID = 4;
 
-    public RobotContainer() {
-        SparkMaxConfig rightConfig = new SparkMaxConfig();
-        rightConfig.inverted(true);
-        m_rightMotor.configure(rightConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
+        private SparkMax m_leftLead;
+        private SparkMax m_leftFollow;
+        private SparkMax m_rightLead;
+        private SparkMax m_rightFollow;
 
-        SparkMaxConfig leftFollowerConfig = new SparkMaxConfig();
-        leftFollowerConfig.follow(m_leftMotor);
-        m_leftFollower.configure(leftFollowerConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
+        private final XboxController m_controller = new XboxController(0);
+        private DifferentialDrive m_robotDrive;
 
-        SparkMaxConfig rightFollowerConfig = new SparkMaxConfig();
-        rightFollowerConfig.follow(m_rightMotor);
-        m_rightFollower.configure(rightFollowerConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
+        @Override
+        public void robotInit() {
+            m_leftLead = new SparkMax(kLeftLeadID, MotorType.kBrushless);
+            m_leftFollow = new SparkMax(kLeftFollowID, MotorType.kBrushless);
 
-        new RunCommand(() -> {
-            double speed = -driverController.getLeftY();
-            double turn = driverController.getRightX();
-            m_leftMotor.set(speed + turn);
-            m_rightMotor.set(speed - turn);
-        });
+            m_rightLead = new SparkMax(kRightLeadID, MotorType.kBrushless);
+            m_rightFollow = new SparkMax(kRightFollowID, MotorType.kBrushless);
+
+            SparkMaxConfig leftFollowConfig = new SparkMaxConfig();
+            leftFollowConfig.follow(m_leftLead);
+            m_leftFollow.configure(leftFollowConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
+
+            SparkMaxConfig rightLeadConfig = new SparkMaxConfig();
+            rightLeadConfig.inverted(true);
+            m_rightLead.configure(rightLeadConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
+
+            SparkMaxConfig rightFollowConfig = new SparkMaxConfig();
+            rightFollowConfig.follow(m_rightLead);
+            m_rightFollow.configure(rightFollowConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
+
+            m_robotDrive = new DifferentialDrive(m_leftLead, m_rightLead);
+        }
+
+        @Override
+        public void teleopPeriodic() {
+            m_robotDrive.arcadeDrive(-m_controller.getLeftY(), m_controller.getLeftX());
+        }
     }
-}
-```
+    ```
+  </Tab>
+  <Tab title="Kraken (TalonFX)">
+    Four TalonFX controllers use the `Follower` control request for follower assignment. Right-side inversion is applied to the right leader via `MotorOutputConfigs`. The right follower uses `opposeLeader = false` because the leader already handles inversion.
 
-Notice the drive `RunCommand` is **identical** to the 2-motor version — only the constructor setup changes.
+    ```java
+    import edu.wpi.first.wpilibj.TimedRobot;
+    import edu.wpi.first.wpilibj.XboxController;
+    import edu.wpi.first.math.MathUtil;
+    import com.ctre.phoenix6.hardware.TalonFX;
+    import com.ctre.phoenix6.controls.Follower;
+    import com.ctre.phoenix6.controls.DutyCycleOut;
+    import com.ctre.phoenix6.signals.InvertedValue;
+    import com.ctre.phoenix6.configs.MotorOutputConfigs;
 
-## Kraken 4-Motor Setup
+    public class Robot extends TimedRobot {
+        private static final int kLeftLeadID = 1;
+        private static final int kLeftFollowID = 2;
+        private static final int kRightLeadID = 3;
+        private static final int kRightFollowID = 4;
 
-For TalonFX (Kraken) controllers, Phoenix 6 provides a `Follower` control request. You set it once during initialization and the follower continuously mirrors the leader.
+        private final TalonFX m_leftLead = new TalonFX(kLeftLeadID);
+        private final TalonFX m_leftFollow = new TalonFX(kLeftFollowID);
+        private final TalonFX m_rightLead = new TalonFX(kRightLeadID);
+        private final TalonFX m_rightFollow = new TalonFX(kRightFollowID);
 
-```java
-// Add these to your 2-motor setup:
-private final TalonFX m_leftFollower = new TalonFX(3, "DINO");
-private final TalonFX m_rightFollower = new TalonFX(4, "DINO");
+        private final XboxController m_controller = new XboxController(0);
 
-// In constructor:
-m_leftFollower.setControl(new Follower(m_leftMotor.getDeviceID(), false));
-m_rightFollower.setControl(new Follower(m_rightMotor.getDeviceID(), false));
-```
+        @Override
+        public void robotInit() {
+            m_leftFollow.setControl(new Follower(m_leftLead.getDeviceID(), false));
+            m_rightFollow.setControl(new Follower(m_rightLead.getDeviceID(), false));
 
-`new Follower(leaderID, opposeLeader)` takes two arguments:
-- **`leaderID`** — the CAN device ID of the motor to follow, retrieved via `getDeviceID()`
-- **`opposeLeader`** — set to `true` to invert the follower relative to the leader (useful if the follower is physically mounted in the opposite orientation). Use `false` for standard same-direction following.
+            var rightConfig = new MotorOutputConfigs();
+            rightConfig.Inverted = InvertedValue.Clockwise_Positive;
+            m_rightLead.getConfigurator().apply(rightConfig);
+        }
 
-<Note>
-  For the right-side TalonFX, right-side inversion is applied to the **leader** via `MotorOutputConfigs` (as in Lesson 3). The right follower uses `opposeLeader = false` because the leader already handles the inversion.
-</Note>
+        @Override
+        public void teleopPeriodic() {
+            double forward = -m_controller.getLeftY();
+            double turn = m_controller.getLeftX();
+            double leftSpeed = MathUtil.clamp(forward + turn, -1.0, 1.0);
+            double rightSpeed = MathUtil.clamp(forward - turn, -1.0, 1.0);
 
-## CAN ID Assignment
+            m_leftLead.setControl(new DutyCycleOut(leftSpeed));
+            m_rightLead.setControl(new DutyCycleOut(rightSpeed));
+        }
+    }
+    ```
+  </Tab>
+  <Tab title="CIM (PWMSparkMax)">
+    PWM controllers use WPILib's `addFollower()` method to pair trailing motors with their leaders. Right-side inversion is applied to `m_rightLead` via `setInverted(true)` — the follower inherits this direction through `addFollower()`.
 
-Every motor controller on the CAN bus must have a **unique integer ID**. In a 4-motor drivetrain, you need four distinct IDs. FRC Academy uses the following default assignment:
+    ```java
+    import edu.wpi.first.wpilibj.TimedRobot;
+    import edu.wpi.first.wpilibj.XboxController;
+    import edu.wpi.first.wpilibj.drive.DifferentialDrive;
+    import edu.wpi.first.wpilibj.motorcontrol.PWMSparkMax;
+
+    public class Robot extends TimedRobot {
+        private static final int kLeftLeadPort = 0;
+        private static final int kLeftFollowPort = 1;
+        private static final int kRightLeadPort = 2;
+        private static final int kRightFollowPort = 3;
+
+        private final PWMSparkMax m_leftLead = new PWMSparkMax(kLeftLeadPort);
+        private final PWMSparkMax m_leftFollow = new PWMSparkMax(kLeftFollowPort);
+        private final PWMSparkMax m_rightLead = new PWMSparkMax(kRightLeadPort);
+        private final PWMSparkMax m_rightFollow = new PWMSparkMax(kRightFollowPort);
+
+        private final XboxController m_controller = new XboxController(0);
+        private DifferentialDrive m_robotDrive;
+
+        @Override
+        public void robotInit() {
+            m_leftLead.addFollower(m_leftFollow);
+            m_rightLead.addFollower(m_rightFollow);
+
+            m_rightLead.setInverted(true);
+
+            m_robotDrive = new DifferentialDrive(m_leftLead, m_rightLead);
+        }
+
+        @Override
+        public void teleopPeriodic() {
+            m_robotDrive.arcadeDrive(-m_controller.getLeftY(), m_controller.getLeftX());
+        }
+    }
+    ```
+  </Tab>
+</Tabs>
+
+## CAN ID and PWM Port Assignment
+
+Every motor controller must have a **unique ID or port**. In a 4-motor drivetrain, you need four distinct values. FRC Academy uses the following default assignments:
+
+**CAN-based motors (NEO / Kraken):**
 
 | Motor | CAN ID |
 |-------|--------|
@@ -105,11 +192,40 @@ Every motor controller on the CAN bus must have a **unique integer ID**. In a 4-
 | Right Leader | 3 |
 | Right Follower | 4 |
 
+**PWM-based motors (CIM):**
+
+| Motor | PWM Port |
+|-------|----------|
+| Left Leader | 0 |
+| Left Follower | 1 |
+| Right Leader | 2 |
+| Right Follower | 3 |
+
 <Warning>
   Duplicate CAN IDs will cause one or both controllers to behave erratically or not respond at all. Always verify your CAN IDs are unique using REV Hardware Client (for SPARK MAX) or CTRE Phoenix Tuner X (for TalonFX) before running the robot.
 </Warning>
 
-On a real robot, you set CAN IDs using your vendor's hardware configuration tool while connected to the controller via USB or the robot's CAN bus.
+## Follower API Differences
+
+Each motor type has its own follower API:
+
+**NEO (SparkMax)** — uses `SparkMaxConfig.follow(leaderMotor)` applied via `.configure()`:
+```java
+SparkMaxConfig leftFollowConfig = new SparkMaxConfig();
+leftFollowConfig.follow(m_leftLead);
+m_leftFollow.configure(leftFollowConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
+```
+
+**Kraken (TalonFX)** — uses `new Follower(leaderID, opposeLeader)` set via `setControl()`:
+```java
+m_leftFollow.setControl(new Follower(m_leftLead.getDeviceID(), false));
+```
+`opposeLeader = false` means the follower runs in the same direction as the leader. Set `true` only if the follower is physically mounted in reverse relative to the leader.
+
+**CIM (PWMSparkMax)** — uses WPILib's `addFollower()` directly on the leader:
+```java
+m_leftLead.addFollower(m_leftFollow);
+```
 
 ## In FRC Academy
 
@@ -131,7 +247,7 @@ To reach this lesson in the app:
 </Steps>
 
 <Note>
-  Only the primary (leader) motors need explicit `set()` calls in the drive loop. Followers update automatically — adding `.set()` calls on follower motors is redundant and may cause unexpected behavior.
+  Only the leader motors need explicit `set()` or `arcadeDrive()` calls in the drive loop. Followers update automatically — adding redundant `set()` calls on follower motors may cause unexpected behavior.
 </Note>
 
 ---

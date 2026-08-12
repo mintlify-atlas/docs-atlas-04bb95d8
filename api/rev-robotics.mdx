@@ -125,14 +125,23 @@ m_leftFollower.configure(
 );
 ```
 
-For a right-side follower that needs to spin opposite to its leader (due to physical mounting orientation), pass `true` to invert:
+For a right-side gearbox, inversion is applied to the right **lead** motor via its own config object, and the right follower simply mirrors the lead without any inversion flag:
 
 ```java
-SparkMaxConfig rightFollowerConfig = new SparkMaxConfig();
-rightFollowerConfig.follow(m_rightMotor, true); // mirror leader in reverse
+// Invert the right lead motor so both sides drive in the same robot direction
+SparkMaxConfig rightLeadConfig = new SparkMaxConfig();
+rightLeadConfig.inverted(true);
+m_rightLead.configure(
+    rightLeadConfig,
+    ResetMode.kResetSafeParameters,
+    PersistMode.kPersistParameters
+);
 
-m_rightFollower.configure(
-    rightFollowerConfig,
+// Right follower mirrors the right lead exactly — no separate inversion needed
+SparkMaxConfig rightFollowConfig = new SparkMaxConfig();
+rightFollowConfig.follow(m_rightLead);
+m_rightFollow.configure(
+    rightFollowConfig,
     ResetMode.kResetSafeParameters,
     PersistMode.kPersistParameters
 );

@@ -4,25 +4,27 @@ sidebarTitle: "2-Motor Tank Drive"
 description: "Build a 2-motor arcade-style tank drive in FRC Java. Configure left and right motors, invert the right side, and bind joystick axes to forward speed and turning."
 ---
 
-Arcade tank drive controls a differential drivetrain using two joystick axes — the left stick's Y axis for forward/reverse speed and the right stick's X axis for turning. This lesson implements a complete 2-motor arcade drive from scratch: you'll declare a left and right motor, invert the right side so both motors push the robot in the same direction, and bind joystick input to the drive loop using a `RunCommand` default command.
+Arcade tank drive controls a differential drivetrain using two joystick axes — the left stick's Y axis for forward/reverse speed and the left stick's X axis for turning. This lesson implements a complete 2-motor arcade drive from scratch: you'll declare a left and right motor, invert the right side so both motors push the robot in the same direction, and implement the drive loop inside `teleopPeriodic()`.
 
 ## What You'll Learn
 
 - How to declare two motors (`m_leftMotor` and `m_rightMotor`) for a differential drivetrain
 - Why the right-side motor must be inverted and how to do it for each motor type
-- How to read joystick axes with `getLeftY()` and `getRightX()` from `CommandXboxController`
+- How to read joystick axes with `getLeftY()` and `getLeftX()` from `CommandXboxController`
 - The arcade drive math formula: `leftOutput = speed + turn`, `rightOutput = speed - turn`
-- How to set a `RunCommand` as the default command so it runs automatically during teleop
+- How to clamp outputs with `MathUtil.clamp()` to stay within the valid `-1.0` to `1.0` range
 
 ## Arcade Drive Math
 
 Arcade drive combines a single forward/backward speed value with a rotation value to produce independent left and right motor outputs:
 
 ```java
-double speed = -driverController.getLeftY(); // negate: up = positive
-double turn = driverController.getRightX();
-double leftOutput = speed + turn;
-double rightOutput = speed - turn;
+double forward = -driverController.getLeftY(); // negate: up = positive
+double turn = driverController.getLeftX();
+double leftSpeed = forward + turn;
+double rightSpeed = forward - turn;
+leftSpeed = MathUtil.clamp(leftSpeed, -1.0, 1.0);
+rightSpeed = MathUtil.clamp(rightSpeed, -1.0, 1.0);
 ```
 
 - **Straight forward**: `turn = 0` → both sides get the same speed.
@@ -34,40 +36,118 @@ double rightOutput = speed - turn;
   The left Y axis is **negated** (`-driverController.getLeftY()`) because WPILib follows joystick convention: pushing the stick forward produces a **negative** value. Negating it converts "up = positive," which is the expected behavior for forward drive.
 </Note>
 
-## Solution (NEO Example)
+## Solutions by Motor Type
 
 <Tabs>
   <Tab title="NEO (SparkMax)">
-    The right motor is inverted via `SparkMaxConfig` so that both motors push the robot forward when given a positive setpoint. The drive loop lives in a `RunCommand` registered as the default command on the drive subsystem.
+    The right motor is inverted via `SparkMaxConfig` so that both motors push the robot forward when given a positive setpoint. The drive loop runs every cycle inside `teleopPeriodic()`.
 
     ```java
+    import edu.wpi.first.wpilibj.TimedRobot;
+    import edu.wpi.first.wpilibj2.command.CommandXboxController;
+    import edu.wpi.first.math.MathUtil;
     import com.revrobotics.spark.SparkMax;
     import com.revrobotics.spark.SparkLowLevel.MotorType;
     import com.revrobotics.spark.config.SparkMaxConfig;
     import com.revrobotics.spark.SparkBase.ResetMode;
     import com.revrobotics.spark.SparkBase.PersistMode;
-    import edu.wpi.first.wpilibj2.command.CommandXboxController;
-    import edu.wpi.first.wpilibj2.command.RunCommand;
 
-    public class RobotContainer {
+    public class Robot extends TimedRobot {
         private final SparkMax m_leftMotor = new SparkMax(1, MotorType.kBrushless);
         private final SparkMax m_rightMotor = new SparkMax(2, MotorType.kBrushless);
         private final CommandXboxController driverController = new CommandXboxController(0);
+        private final CommandXboxController operatorController = new CommandXboxController(1);
 
-        public RobotContainer() {
+        @Override
+        public void robotInit() {
             SparkMaxConfig rightConfig = new SparkMaxConfig();
             rightConfig.inverted(true);
             m_rightMotor.configure(rightConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
+        }
 
-            CommandScheduler.getInstance().setDefaultCommand(
-                driveSubsystem,
-                new RunCommand(() -> {
-                    double speed = -driverController.getLeftY();
-                    double turn = driverController.getRightX();
-                    m_leftMotor.set(speed + turn);
-                    m_rightMotor.set(speed - turn);
-                })
-            );
+        @Override
+        public void teleopPeriodic() {
+            double forward = -driverController.getLeftY();
+            double turn = driverController.getLeftX();
+            double leftSpeed = forward + turn;
+            double rightSpeed = forward - turn;
+            leftSpeed = MathUtil.clamp(leftSpeed, -1.0, 1.0);
+            rightSpeed = MathUtil.clamp(rightSpeed, -1.0, 1.0);
+            m_leftMotor.set(leftSpeed);
+            m_rightMotor.set(rightSpeed);
+        }
+    }
+    ```
+  </Tab>
+  <Tab title="Kraken (TalonFX)">
+    The Kraken uses `MotorOutputConfigs` for inversion and `DutyCycleOut` control requests for motor output.
+
+    ```java
+    import edu.wpi.first.wpilibj.TimedRobot;
+    import edu.wpi.first.wpilibj2.command.CommandXboxController;
+    import edu.wpi.first.math.MathUtil;
+    import com.ctre.phoenix6.hardware.TalonFX;
+    import com.ctre.phoenix6.controls.DutyCycleOut;
+    import com.ctre.phoenix6.configs.MotorOutputConfigs;
+    import com.ctre.phoenix6.signals.InvertedValue;
+
+    public class Robot extends TimedRobot {
+        private final TalonFX m_leftMotor = new TalonFX(1, "DINO");
+        private final TalonFX m_rightMotor = new TalonFX(2, "DINO");
+        private final CommandXboxController driverController = new CommandXboxController(0);
+        private final CommandXboxController operatorController = new CommandXboxController(1);
+
+        @Override
+        public void robotInit() {
+            var rightConfig = new MotorOutputConfigs();
+            rightConfig.Inverted = InvertedValue.Clockwise_Positive;
+            m_rightMotor.getConfigurator().apply(rightConfig);
+        }
+
+        @Override
+        public void teleopPeriodic() {
+            double forward = -driverController.getLeftY();
+            double turn = driverController.getLeftX();
+            double leftSpeed = forward + turn;
+            double rightSpeed = forward - turn;
+            leftSpeed = MathUtil.clamp(leftSpeed, -1.0, 1.0);
+            rightSpeed = MathUtil.clamp(rightSpeed, -1.0, 1.0);
+            m_leftMotor.setControl(new DutyCycleOut(leftSpeed));
+            m_rightMotor.setControl(new DutyCycleOut(rightSpeed));
+        }
+    }
+    ```
+  </Tab>
+  <Tab title="CIM (PWMSparkMax)">
+    PWM controllers use WPILib's `setInverted()` method directly on the motor object. The drive math and loop are identical to the NEO version.
+
+    ```java
+    import edu.wpi.first.wpilibj.TimedRobot;
+    import edu.wpi.first.wpilibj2.command.CommandXboxController;
+    import edu.wpi.first.math.MathUtil;
+    import edu.wpi.first.wpilibj.motorcontrol.PWMSparkMax;
+
+    public class Robot extends TimedRobot {
+        private final PWMSparkMax m_leftMotor = new PWMSparkMax(0);
+        private final PWMSparkMax m_rightMotor = new PWMSparkMax(1);
+        private final CommandXboxController driverController = new CommandXboxController(0);
+        private final CommandXboxController operatorController = new CommandXboxController(1);
+
+        @Override
+        public void robotInit() {
+            m_rightMotor.setInverted(true);
+        }
+
+        @Override
+        public void teleopPeriodic() {
+            double forward = -driverController.getLeftY();
+            double turn = driverController.getLeftX();
+            double leftSpeed = forward + turn;
+            double rightSpeed = forward - turn;
+            leftSpeed = MathUtil.clamp(leftSpeed, -1.0, 1.0);
+            rightSpeed = MathUtil.clamp(rightSpeed, -1.0, 1.0);
+            m_leftMotor.set(leftSpeed);
+            m_rightMotor.set(rightSpeed);
         }
     }
     ```

@@ -1,7 +1,7 @@
 ---
-title: "WPILib Command Architecture: CommandXboxController, RunCommand"
+title: "WPILib Commands: CommandXboxController, RunCommand"
 sidebarTitle: "Commands"
-description: "Reference for WPILib Command-Based classes used in FRC Academy: CommandXboxController button triggers, RunCommand inline lambdas, and InstantCommand one-shot execution."
+description: "Reference for WPILib Command-Based classes in FRC Academy: CommandXboxController triggers, RunCommand inline lambdas, and InstantCommand one-shot blocks."
 ---
 
 FRC Academy lessons use WPILib's Command-Based architecture — specifically `CommandXboxController` for button-to-command binding and `RunCommand`/`InstantCommand` for inline motor control. This page covers the three command classes you'll encounter in every FRC Academy lesson.
@@ -64,7 +64,7 @@ new CommandXboxController(int port)
 ```java
 operatorController.b()
     .whileTrue(new RunCommand(() -> m_motor.set(0.5)))
-    .onFalse(new RunCommand(() -> m_motor.set(0.0)));
+    .onFalse(new InstantCommand(() -> m_motor.set(0.0)));
 ```
 
 ---
@@ -89,7 +89,7 @@ The optional `Subsystem` requirements argument registers this command with the s
 ```java
 new RunCommand(() -> {
     double speed = -driverController.getLeftY();
-    double turn = driverController.getRightX();
+    double turn = driverController.getLeftX();
     m_leftMotor.set(speed + turn);
     m_rightMotor.set(speed - turn);
 })
@@ -131,10 +131,10 @@ The motor-hold pattern is used throughout every FRC Academy motor lesson. It pai
 // When button B is released: stop motor
 operatorController.b()
     .whileTrue(new RunCommand(() -> m_motor.set(0.5)))
-    .onFalse(new RunCommand(() -> m_motor.set(0.0)));
+    .onFalse(new InstantCommand(() -> m_motor.set(0.0)));
 ```
 
-When the button is released, WPILib interrupts the `whileTrue` command automatically, then immediately fires the `.onFalse()` command. The stop `RunCommand` runs once, sets the motor to `0.0`, and since nothing is keeping it running it ends on the next scheduler cycle. The result is a motor that runs at full speed exactly while the button is held and stops cleanly the moment the driver lets go.
+When the button is released, WPILib interrupts the `whileTrue` command automatically, then immediately fires the `.onFalse()` command. The stop `InstantCommand` runs once, sets the motor to `0.0`, and finishes on the same scheduler cycle it starts. The result is a motor that runs at full speed exactly while the button is held and stops cleanly the moment the driver lets go.
 
 <Note>
 FRC Academy uses simplified `RobotContainer`-style structures directly inside `Robot.java` for teaching clarity. In a full robot project, motors and their associated commands are usually wrapped in dedicated `Subsystem` classes, and binding is done inside a `RobotContainer` class passed to the `CommandScheduler`.
